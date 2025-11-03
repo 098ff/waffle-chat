@@ -1,49 +1,156 @@
-// 1. เปลี่ยน Imports เป็น Requires
-const { Server } = require("socket.io");
-const http = require("http");
-const express = require("express");
-const { socketAuthMiddleware } = require("../middleware/socket.auth.js");
+const { Server } = require('socket.io');
+const { socketAuthMiddleware } = require('../middleware/socket.auth');
+const Chat = require('../models/Chat');
+const Message = require('../models/Message');
 
-const app = express();
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: [process.env.CLIENT_URL],
-    credentials: true,
-  },
-});
-
-// apply authentication middleware to all socket connections
-io.use(socketAuthMiddleware);
+let io = null;
+const userSocketMap = {};
 
 function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
-// this is for storig online users
-const userSocketMap = {};
+async function initSocket(server) {
+  if (io) return io;
 
-io.on("connection", (socket) => {
-  console.log("A user connected", socket.user.fullName);
-
-  const userId = socket.userId;
-  userSocketMap[userId] = socket.id;
-
-  // io.emit() is used to send events to all connected clients
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-  // with socket.on we listen for events from clients
-  socket.on("disconnect", () => {
-    console.log("A user disconnected", socket.user.fullName);
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  io = new Server(server, {
+    cors: {
+      origin: [process.env.CLIENT_URL || 'http://localhost:3000'],
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
   });
-});
+
+  // attach auth middleware
+  io.use(socketAuthMiddleware);
+
+  io.on('connection', async (socket) => {
+    try {
+      const userId = socket.userId;
+      userSocketMap[userId] = socket.id;
+      console.log('Socket connected for user', userId);
+
+      // emit online users
+      io.emit('getOnlineUsers', Object.keys(userSocketMap));
+
+      // auto-join user's chats
+      try {
+        const chats = await Chat.find({ 'participants.user': userId }).select(
+          '_id',
+        );
+        chats.forEach((c) => socket.join(c._id.toString()));
+      } catch (err) {
+        console.warn('Failed to auto-join chats for user', userId, err.message);
+      }
+
+      // join a chat room
+      socket.on('join-room', async ({ chatId }, callback) => {
+        try {
+          const chat = await Chat.findById(chatId);
+          if (!chat)
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Chat not found' })
+            );
+
+          const isMember = chat.participants.some(
+            (p) => p.user.toString() === userId.toString(),
+          );
+          if (!isMember)
+            return (
+              callback && callback({ status: 'error', message: 'Not a member' })
+            );
+
+          socket.join(chatId);
+          io.to(chatId).emit('member:joined', { chatId, userId });
+          return callback && callback({ status: 'ok' });
+        } catch (err) {
+          console.error('join-room error', err.message);
+          return callback && callback({ status: 'error' });
+        }
+      });
+
+      socket.on('leave-room', ({ chatId }, callback) => {
+        socket.leave(chatId);
+        io.to(chatId).emit('member:left', { chatId, userId });
+        return callback && callback({ status: 'ok' });
+      });
+
+      // typing indicator
+      socket.on('typing', ({ chatId, typing }) => {
+        socket.to(chatId).emit('typing', { chatId, userId, typing });
+      });
+
+      // create message
+      socket.on('message:create', async (payload, callback) => {
+        try {
+          const { chatId, text, image } = payload;
+          if (!chatId || (!text && !image)) {
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Invalid payload' })
+            );
+          }
+
+          const chat = await Chat.findById(chatId);
+          if (!chat)
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Chat not found' })
+            );
+          const isMember = chat.participants.some(
+            (p) => p.user.toString() === userId.toString(),
+          );
+          if (!isMember)
+            return (
+              callback && callback({ status: 'error', message: 'Not a member' })
+            );
+
+          let imageUrl = null;
+          if (image) {
+            try {
+              const cloudinary = require('./cloudinary');
+              const uploadResponse = await cloudinary.uploader.upload(image);
+              imageUrl = uploadResponse.secure_url;
+            } catch (e) {
+              console.warn('Image upload failed', e.message);
+            }
+          }
+
+          const newMessage = await Message.create({
+            senderId: userId,
+            chatId,
+            text,
+            image: imageUrl,
+          });
+
+          // update lastMessage on chat
+          chat.lastMessage = newMessage._id;
+          await chat.save();
+
+          io.to(chatId).emit('message:new', newMessage);
+          return callback && callback({ status: 'ok', message: newMessage });
+        } catch (err) {
+          console.error('message:create error', err.message);
+          return callback && callback({ status: 'error' });
+        }
+      });
+
+      socket.on('disconnect', () => {
+        delete userSocketMap[userId];
+        io.emit('getOnlineUsers', Object.keys(userSocketMap));
+      });
+    } catch (err) {
+      console.error('Socket connection handler error', err.message);
+    }
+  });
+
+  return io;
+}
 
 module.exports = {
-  io,
-  app,
-  server,
+  initSocket,
   getReceiverSocketId,
+  userSocketMap,
+  getIo: () => io,
 };

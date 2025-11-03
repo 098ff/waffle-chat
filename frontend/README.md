@@ -1,6 +1,6 @@
-# React + TypeScript + Vite
+# Waffle Chat - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time chat application frontend built with React, TypeScript, Redux Toolkit, and Socket.IO.
 
 Currently, two official plugins are available:
 
