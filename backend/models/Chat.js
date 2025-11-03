@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const ParticipantSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   role: { type: String, enum: ['member', 'admin'], default: 'member' },
+  fullName: { type: String },
   joinedAt: { type: Date, default: Date.now },
 });
 
