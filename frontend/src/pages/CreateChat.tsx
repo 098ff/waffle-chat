@@ -9,9 +9,10 @@ import type { AppDispatch } from '../store';
 import type { User } from '../types';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
-import ChatTypeCard from '../components/chat/ChatTypeCard';
-import UserListItem from '../components/UserListItem';
-import EmptyState from '../components/EmptyState';
+// EmptyState is used inside UserSelector
+import CreateChatHeader from '../components/createchat/CreateChatHeader';
+import ChatTypeSelector from '../components/createchat/ChatTypeSelector';
+import UserSelector from '../components/createchat/UserSelector';
 
 export default function CreateChat() {
     const [chatType, setChatType] = useState<'private' | 'group'>('private');
@@ -93,50 +94,17 @@ export default function CreateChat() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+        <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 py-8 px-4">
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white rounded-lg shadow-xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800">
-                            Create New Chat
-                        </h1>
-                        <button
-                            onClick={() => navigate('/chats')}
-                            className="text-gray-600 hover:text-gray-800 transition"
-                        >
-                            ✕
-                        </button>
-                    </div>
+                    <CreateChatHeader />
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Chat Type Selector */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Chat Type
-                            </label>
-                            <div className="flex gap-4">
-                                <ChatTypeCard
-                                    type="private"
-                                    title="Private Chat"
-                                    description="One-on-one conversation"
-                                    isSelected={chatType === 'private'}
-                                    onClick={() => {
-                                        setChatType('private');
-                                        setSelectedUsers([]);
-                                    }}
-                                />
-                                <ChatTypeCard
-                                    type="group"
-                                    title="Group Chat"
-                                    description="Chat with multiple people"
-                                    isSelected={chatType === 'group'}
-                                    onClick={() => {
-                                        setChatType('group');
-                                        setSelectedUsers([]);
-                                    }}
-                                />
-                            </div>
-                        </div>
+                        <ChatTypeSelector
+                            chatType={chatType}
+                            setChatType={setChatType}
+                            resetSelection={() => setSelectedUsers([])}
+                        />
 
                         {/* Group Name */}
                         {chatType === 'group' && (
@@ -151,41 +119,13 @@ export default function CreateChat() {
                             />
                         )}
 
-                        {/* User Selection */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                {chatType === 'private'
-                                    ? 'Select User'
-                                    : 'Select Participants'}
-                            </label>
-                            {loadingUsers ? (
-                                <div className="text-center py-8 text-gray-500">
-                                    Loading users...
-                                </div>
-                            ) : allUsers.length === 0 ? (
-                                <EmptyState message="No users available" />
-                            ) : (
-                                <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg divide-y">
-                                    {allUsers.map((user) => (
-                                        <UserListItem
-                                            key={user._id}
-                                            user={user}
-                                            selected={selectedUsers.includes(
-                                                user._id,
-                                            )}
-                                            selectionType={
-                                                chatType === 'private'
-                                                    ? 'radio'
-                                                    : 'checkbox'
-                                            }
-                                            onToggle={() =>
-                                                handleUserToggle(user._id)
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <UserSelector
+                            allUsers={allUsers}
+                            loadingUsers={loadingUsers}
+                            selectedUsers={selectedUsers}
+                            chatType={chatType}
+                            onToggle={handleUserToggle}
+                        />
 
                         {/* Selected Count */}
                         {selectedUsers.length > 0 && (

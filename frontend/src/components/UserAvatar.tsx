@@ -18,11 +18,26 @@ export default function UserAvatar({
         lg: 'w-12 h-12 text-lg',
     };
     const initial = name.charAt(0).toUpperCase();
+    const avatarColor = () => {
+        // Avatar color relate with alphabet
+        const charCode = initial.charCodeAt(0);
+        const colors = [
+            'from-blue-400 to-blue-600',
+            'from-red-400 to-red-600',
+            'from-green-400 to-green-600',
+            'from-purple-400 to-purple-600',
+            'from-pink-400 to-pink-600',
+            'from-yellow-400 to-yellow-600',
+            'from-indigo-400 to-indigo-600',
+            'from-teal-400 to-teal-600',
+        ];
+        return colors[charCode % colors.length];
 
+    }
     return (
         <div className="relative shrink-0">
             <div
-                className={`${sizeClasses[size]} rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold`}
+                className={`${sizeClasses[size]} rounded-full bg-linear-to-br ${avatarColor()} flex items-center justify-center text-white font-semibold`}
             >
                 {initial}
             </div>
