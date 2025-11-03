@@ -24,14 +24,12 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 const register = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
-
-        // Create user 
+        const { fullName, email, password } = req.body;
+        // Create user
         const user = await User.create({
-            name,
+            fullName,
             email,
             password,
-            role
         });
 
         sendTokenResponse(user, 200, res);
