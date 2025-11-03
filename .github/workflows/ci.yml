@@ -1,0 +1,19 @@
+name: CI Build Frontend
+on: [push, pull_request]
+
+jobs:
+  build_frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    - name: Install dependencies
+      run: npm install
+    - name: Start build
+      run: npm run build
