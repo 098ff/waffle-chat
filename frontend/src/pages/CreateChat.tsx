@@ -9,7 +9,7 @@ import type { AppDispatch } from '../store';
 import type { User } from '../types';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
-import ChatTypeCard from '../components/ChatTypeCard';
+import ChatTypeCard from '../components/chat/ChatTypeCard';
 import UserListItem from '../components/UserListItem';
 import EmptyState from '../components/EmptyState';
 
