@@ -191,14 +191,14 @@ export default function ChatRoom() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => navigate('/create-chat')}
-                                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                className="p-2 outline-2 bg-blue-300 text-white rounded-lg hover:outline-blue-700 transition"
                                 title="New Chat"
                             >
                                 ➕
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                className="p-2 outline-2 bg-red-300 text-white rounded-lg hover:outline-red-700 transition"
                                 title="Logout"
                             >
                                 🚪
