@@ -1,5 +1,5 @@
 const cloudinary = require('../config/cloudinary.js');
-const { getReceiverSocketId, io } = require('../config/socket.js');
+const { getReceiverSocketId, getIo } = require('../config/socket');
 // Use the new chat-aware message model
 const Message = require('../models/Message.js');
 const User = require('../models/User.js');
@@ -75,7 +75,9 @@ const sendMessage = async (req, res) => {
 
     // Socket.IO
     const receiverSocketId = getReceiverSocketId(receiverId);
-    if (receiverSocketId) {
+    const io = getIo();
+    if (io && receiverSocketId) {
+      // emit directly to socket id
       io.to(receiverSocketId).emit('newMessage', newMessage);
     }
 

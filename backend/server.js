@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const cors = require('cors');
-const { Server } = require('socket.io');
+const { initSocket } = require('./config/socket');
 const path = require('path');
 
 // Route files
@@ -34,34 +34,14 @@ app.use('/api/auth', auth);
 app.use('/api/messages', message);
 app.use('/api/chats', chat);
 
-// Socket.io setup
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:5003',
-    methods: ['GET', 'POST'],
-  },
-  connectionStateRecovery: {},
-});
-
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
 });
-io.on('connection', (socket) => {
-  console.log('a user connected');
-  socket.on('request', (arg1, arg2, callback) => {
-    console.log(arg1); // { foo: 'bar' }
-    console.log(arg2); // 'baz'
-    callback({
-      status: 'ok',
-    });
-  });
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', msg);
-  });
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
+
+// initialize socket.io with our server (sets up auth and handlers)
+initSocket(server).catch((err) =>
+  console.warn('Socket init warning:', err && err.message),
+);
 
 // Use || 5000 for running in window
 const PORT = process.env.PORT || 5000;
