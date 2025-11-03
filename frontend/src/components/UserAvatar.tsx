@@ -17,7 +17,6 @@ export default function UserAvatar({
         md: 'w-10 h-10 text-base',
         lg: 'w-12 h-12 text-lg',
     };
-
     const initial = name.charAt(0).toUpperCase();
 
     return (

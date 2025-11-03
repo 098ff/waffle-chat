@@ -1,3 +1,4 @@
+const { ErrorMessages } = require('../helper/error.js');
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const User = require('../models/User');
@@ -9,14 +10,14 @@ const createChat = async (req, res) => {
     const creator = req.user._id;
 
     if (!type || !['private', 'group'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid chat type' });
+      return res.status(400).json({ message: ErrorMessages.INVALID_CHAT_TYPE });
     }
 
     if (type === 'private') {
       // participants should be an array with exactly one other user
       if (!Array.isArray(participants) || participants.length !== 1) {
         return res.status(400).json({
-          message: 'Private chat requires exactly one other participant',
+          message: ErrorMessages.PRIVATE_CHAT_ONE_PARTICIPANT,
         });
       }
       const otherId = participants[0];
@@ -32,7 +33,10 @@ const createChat = async (req, res) => {
 
       // find existing
       let chat = await Chat.findOne({ type: 'private', participantsSorted });
-      if (chat) return res.status(200).json(chat);
+      if (chat)
+        return res
+          .status(400)
+          .json({ message: ErrorMessages.CHAT_ALREADY_EXISTS });
 
       chat = await Chat.create({
         type: 'private',
@@ -51,7 +55,7 @@ const createChat = async (req, res) => {
     if (!Array.isArray(participants) || participants.length < 1) {
       return res
         .status(400)
-        .json({ message: 'Group chat requires one or more participants' });
+        .json({ message: ErrorMessages.GROUP_CHAT_REQUIRES_PARTICIPANTS });
     }
 
     const uniqueParts = Array.from(
@@ -71,8 +75,13 @@ const createChat = async (req, res) => {
 
     res.status(201).json(chat);
   } catch (err) {
-    console.error('createChat error', err.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error('createChat error', err);
+    if (err.code === 11000) {
+      return res
+        .status(400)
+        .json({ message: ErrorMessages.CHAT_ALREADY_EXISTS });
+    }
+    res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
   }
 };
 
@@ -86,7 +95,7 @@ const getChatsForUser = async (req, res) => {
     res.status(200).json(chats);
   } catch (err) {
     console.error('getChatsForUser', err.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
   }
 };
 
@@ -97,20 +106,21 @@ const getMessagesByChatId = async (req, res) => {
     const userId = req.user._id;
 
     const chat = await Chat.findById(chatId);
-    if (!chat) return res.status(404).json({ message: 'Chat not found' });
+    if (!chat)
+      return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
 
     // ensure user is participant
     const isMember = chat.participants.some(
       (p) => p.user.toString() === userId.toString(),
     );
     if (!isMember)
-      return res.status(403).json({ message: 'Not a member of this chat' });
+      return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
 
     const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
     res.status(200).json(messages);
   } catch (err) {
     console.error('getMessagesByChatId', err.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
   }
 };
 
@@ -122,13 +132,14 @@ const postMessageToChat = async (req, res) => {
     const senderId = req.user._id;
 
     const chat = await Chat.findById(chatId);
-    if (!chat) return res.status(404).json({ message: 'Chat not found' });
+    if (!chat)
+      return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
 
     const isMember = chat.participants.some(
       (p) => p.user.toString() === senderId.toString(),
     );
     if (!isMember)
-      return res.status(403).json({ message: 'Not a member of this chat' });
+      return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
 
     let imageUrl = null;
     if (image) {
@@ -160,7 +171,7 @@ const postMessageToChat = async (req, res) => {
     res.status(201).json(newMessage);
   } catch (err) {
     console.error('postMessageToChat', err.message);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
   }
 };
 
