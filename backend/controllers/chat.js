@@ -22,6 +22,11 @@ const createChat = async (req, res) => {
       }
       const otherId = participants[0];
 
+      const creatorName = await User.findById(creator).then((u) => u.fullName);
+      const otherUserName = await User.findById(otherId).then(
+        (u) => u.fullName,
+      );
+
       // build sorted key
       const ids = [creator.toString(), otherId.toString()].sort();
       const participantsSorted = ids.join('_');
@@ -36,8 +41,8 @@ const createChat = async (req, res) => {
       chat = await Chat.create({
         type: 'private',
         participants: [
-          { user: creator, fullName: 'Creator Name', role: 'member' }, // Placeholder
-          { user: otherId, fullName: 'Other User Name', role: 'member' }, // Placeholder
+          { user: creator, fullName: creatorName, role: 'member' },
+          { user: otherId, fullName: otherUserName, role: 'member' },
         ],
         createdBy: creator,
         participantsSorted,
