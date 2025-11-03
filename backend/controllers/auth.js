@@ -27,6 +27,22 @@ const sendTokenResponse = (user, statusCode, res) => {
 const register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
+
+    const existingEmail = await User.findOne({ email: email });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is already registered.', 
+      });
+    }
+
+    const existingUser = await User.findOne({ fullName: fullName });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'This username is already registered.', 
+      });
+    }
     // Create user
     const user = await User.create({
       fullName,

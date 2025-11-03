@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Chat, Message } from '../types';
+import { logout } from './authSlice';
 
 interface ChatState {
     chats: Chat[];
@@ -73,6 +74,9 @@ const chatSlice = createSlice({
             state.loading = action.payload;
         },
     },
+    extraReducers: (builder) => {
+        builder.addCase(logout, () => initialState);
+    }
 });
 
 export const {
