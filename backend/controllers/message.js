@@ -1,5 +1,6 @@
 const cloudinary = require('../config/cloudinary.js');
 const { getReceiverSocketId, io } = require('../config/socket.js');
+// Use the new chat-aware message model
 const Message = require('../models/Message.js');
 const User = require('../models/User.js');
 // const Group = require('../models/Group.js');
@@ -7,7 +8,9 @@ const User = require('../models/User.js');
 const getAllContacts = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
-    const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password');
+    const filteredUsers = await User.find({
+      _id: { $ne: loggedInUserId },
+    }).select('-password');
     res.status(200).json(filteredUsers);
   } catch (error) {
     console.log('Error in getAllContacts:', error);
@@ -25,8 +28,8 @@ const getMessagesByUserId = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
-      groupId: null,
-    });
+      chatId: null,
+    }).sort({ createdAt: 1 });
     // .populate('senderId', 'fullName profilePic');
 
     res.status(200).json(messages);
@@ -43,14 +46,16 @@ const sendMessage = async (req, res) => {
     const senderId = req.user._id;
 
     if (!text && !image) {
-      return res.status(400).json({ message: "Text or image is required." });
+      return res.status(400).json({ message: 'Text or image is required.' });
     }
     if (senderId.equals(receiverId)) {
-      return res.status(400).json({ message: "Cannot send messages to yourself." });
+      return res
+        .status(400)
+        .json({ message: 'Cannot send messages to yourself.' });
     }
     const receiverExists = await User.exists({ _id: receiverId });
     if (!receiverExists) {
-      return res.status(404).json({ message: "Receiver not found." });
+      return res.status(404).json({ message: 'Receiver not found.' });
     }
 
     let imageUrl;
@@ -129,7 +134,7 @@ const sendMessage = async (req, res) => {
 //   try {
 //     const { id: groupId } = req.params;
 //     const userId = req.user._id;
-    
+
 //     // ตรวจสอบว่าผู้ใช้เป็นสมาชิกกลุ่ม (เพื่อความปลอดภัย)
 //     const group = await Group.findById(groupId);
 //     if (!group || !group.members.includes(userId)) {
@@ -137,7 +142,7 @@ const sendMessage = async (req, res) => {
 //     }
 
 //     const messages = await Message.find({
-//       groupId: groupId, 
+//       groupId: groupId,
 //     });
 //     // .populate('senderId', 'fullName profilePic');
 
@@ -154,7 +159,7 @@ const getChatPartners = async (req, res) => {
 
     const messages = await Message.find({
       $or: [{ senderId: loggedInUserId }, { receiverId: loggedInUserId }],
-      groupId: null, // ดึงเฉพาะแชทส่วนตัว
+      chatId: null, // only private 1:1 messages
     });
 
     const chatPartnerIds = [
@@ -162,12 +167,14 @@ const getChatPartners = async (req, res) => {
         messages.map((msg) =>
           msg.senderId.toString() === loggedInUserId.toString()
             ? msg.receiverId.toString()
-            : msg.senderId.toString()
-        )
+            : msg.senderId.toString(),
+        ),
       ),
     ];
 
-    const chatPartners = await User.find({ _id: { $in: chatPartnerIds } }).select('-password');
+    const chatPartners = await User.find({
+      _id: { $in: chatPartnerIds },
+    }).select('-password');
     res.status(200).json(chatPartners);
   } catch (error) {
     console.error('Error in getChatPartners: ', error.message);
@@ -180,6 +187,6 @@ module.exports = {
   getMessagesByUserId,
   sendMessage,
   getChatPartners,
-//   sendGroupMessage,
-//   getMessagesByGroupId,
+  //   sendGroupMessage,
+  //   getMessagesByGroupId,
 };

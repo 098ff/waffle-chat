@@ -5,11 +5,12 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const path = require('path');
+
 // Route files
 const auth = require('./routes/auth');
 const message = require('./routes/message.js');
+const chat = require('./routes/chat');
 const { createServer } = require('http');
-
 dotenv.config({ path: './config/config.env' });
 const app = express();
 const server = createServer(app);
@@ -20,17 +21,18 @@ app.set('query parser', 'extended');
 
 // Body parser
 app.use(express.json());
+// Database connection
+connectDB();
 
 // Cookie parser
 app.use(cookieParser());
 
 app.use(cors());
 
-connectDB();
-
 // Mount routers
 app.use('/api/auth', auth);
 app.use('/api/messages', message);
+app.use('/api/chats', chat);
 
 // Socket.io setup
 const io = new Server(server, {
