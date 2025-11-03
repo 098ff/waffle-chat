@@ -22,11 +22,6 @@ const createChat = async (req, res) => {
       }
       const otherId = participants[0];
 
-      const creatorName = await User.findById(creator).then((u) => u.fullName);
-      const otherUserName = await User.findById(otherId).then(
-        (u) => u.fullName,
-      );
-
       // build sorted key
       const ids = [creator.toString(), otherId.toString()].sort();
       const participantsSorted = ids.join('_');
@@ -41,8 +36,8 @@ const createChat = async (req, res) => {
       chat = await Chat.create({
         type: 'private',
         participants: [
-          { user: creator, fullName: creatorName, role: 'member' },
-          { user: otherId, fullName: otherUserName, role: 'member' },
+          { user: creator, fullName: 'Creator Name', role: 'member' }, // Placeholder
+          { user: otherId, fullName: 'Other User Name', role: 'member' }, // Placeholder
         ],
         createdBy: creator,
         participantsSorted,
@@ -51,26 +46,44 @@ const createChat = async (req, res) => {
       return res.status(201).json(chat);
     }
 
-    // group chat
     if (!Array.isArray(participants) || participants.length < 1) {
       return res
         .status(400)
         .json({ message: ErrorMessages.GROUP_CHAT_REQUIRES_PARTICIPANTS });
     }
 
-    const uniqueParts = Array.from(
-      new Set(participants.map((p) => p.toString())),
-    );
-    const participantsDocs = uniqueParts.map((p) => ({
-      user: p,
-      role: p === creator.toString() ? 'admin' : 'member',
+    const creatorIdStr = creator.toString();
+
+    const allParticipantIds = [
+      creatorIdStr,
+      ...participants.map((p) => p.toString()),
+    ];
+
+    const uniqueParticipantIds = Array.from(new Set(allParticipantIds));
+
+    const participantsDocs = uniqueParticipantIds.map((pId) => ({
+      user: pId,
+      role: pId === creatorIdStr ? 'admin' : 'member',
     }));
+
+    const participantsSorted = [...uniqueParticipantIds].sort().join('_');
+
+    let existingGroupChat = await Chat.findOne({
+      type: 'group',
+      participantsSorted,
+    });
+    if (existingGroupChat) {
+      return res
+        .status(400)
+        .json({ message: ErrorMessages.CHAT_ALREADY_EXISTS });
+    }
 
     const chat = await Chat.create({
       type: 'group',
       name: name || 'Group chat',
       participants: participantsDocs,
       createdBy: creator,
+      participantsSorted: participantsSorted, 
     });
 
     res.status(201).json(chat);
