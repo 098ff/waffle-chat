@@ -20,6 +20,8 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
     const navigate = useNavigate();
 
+    console.log('User prop in Sidebar:', user);
+
     return (
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-200">
