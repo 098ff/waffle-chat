@@ -29,6 +29,7 @@ export const authAPI = {
         api.post('/auth/login', data),
     logout: () => api.post('/auth/logout'),
     checkAuth: () => api.get('/auth/check'),
+    getMe: () => api.get('/auth/me'),
 };
 
 // Chat endpoints

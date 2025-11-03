@@ -20,10 +20,6 @@ export default function Login() {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
-    const setLocalStorageUser = (user: User) => {
-        localStorage.setItem('user', JSON.stringify(user));
-    };
-
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -38,7 +34,7 @@ export default function Login() {
                 const user: User = {
                     _id: data._id,
                     email: data.email,
-                    fullName: data.name,
+                    fullName: data.fullName,
                     createdAt: new Date().toISOString(),
                 };
                 dispatch(
@@ -47,7 +43,6 @@ export default function Login() {
                         token: data.token,
                     }),
                 );
-                setLocalStorageUser(user);
                 toast.success('Login successful!');
                 navigate('/chats');
             }
