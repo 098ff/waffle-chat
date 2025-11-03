@@ -15,8 +15,9 @@ export interface AuthResponse {
 }
 
 export interface Participant {
-    user: string | User;
+    user: string;
     role: 'member' | 'admin';
+    fullName: string;
     joinedAt: string;
     _id?: string;
 }

@@ -16,6 +16,11 @@ import { logout } from '../store/authSlice';
 import { toast } from 'react-toastify';
 import type { RootState, AppDispatch } from '../store';
 import type { Chat, Message } from '../types';
+import Button from '../components/Button';
+import ChatListItem from '../components/ChatListItem';
+import MessageBubble from '../components/MessageBubble';
+import EmptyState from '../components/EmptyState';
+import UserAvatar from '../components/UserAvatar';
 
 export default function ChatRoom() {
     const [messageText, setMessageText] = useState('');
@@ -161,10 +166,10 @@ export default function ChatRoom() {
             return chat.name || 'Group Chat';
         }
         const otherParticipant = chat.participants.find(
-            (p) => typeof p.user === 'object' && p.user._id !== user?._id,
+            (p) => p.user !== user?._id,
         );
-        if (otherParticipant && typeof otherParticipant.user === 'object') {
-            return otherParticipant.user.fullName;
+        if (otherParticipant) {
+            return otherParticipant.fullName;
         }
         return 'Private Chat';
     };
@@ -208,44 +213,22 @@ export default function ChatRoom() {
 
                 <div className="flex-1 overflow-y-auto">
                     {chats.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <p>No chats yet</p>
-                            <button
-                                onClick={() => navigate('/create-chat')}
-                                className="mt-2 text-blue-600 hover:text-blue-700"
-                            >
-                                Create your first chat
-                            </button>
-                        </div>
+                        <EmptyState
+                            message="No chats yet"
+                            action={{
+                                label: 'Create your first chat',
+                                onClick: () => navigate('/create-chat'),
+                            }}
+                        />
                     ) : (
                         chats.map((chat) => (
-                            <button
+                            <ChatListItem
                                 key={chat._id}
+                                chat={chat}
+                                currentUser={user}
+                                isActive={currentChat?._id === chat._id}
                                 onClick={() => dispatch(setCurrentChat(chat))}
-                                className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition text-left ${
-                                    currentChat?._id === chat._id
-                                        ? 'bg-blue-50'
-                                        : ''
-                                }`}
-                            >
-                                <div className="flex items-center">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold flex-shrink-0">
-                                        {getChatName(chat)
-                                            .charAt(0)
-                                            .toUpperCase()}
-                                    </div>
-                                    <div className="ml-3 flex-1 overflow-hidden">
-                                        <div className="font-medium text-gray-800 truncate">
-                                            {getChatName(chat)}
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                            {chat.type === 'group'
-                                                ? `${chat.participants.length} members`
-                                                : 'Private chat'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </button>
+                            />
                         ))
                     )}
                 </div>
@@ -258,11 +241,10 @@ export default function ChatRoom() {
                         {/* Chat Header */}
                         <div className="bg-white border-b border-gray-200 p-4">
                             <div className="flex items-center">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
-                                    {getChatName(currentChat)
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </div>
+                                <UserAvatar
+                                    name={getChatName(currentChat)}
+                                    size="md"
+                                />
                                 <div className="ml-3">
                                     <div className="font-semibold text-gray-800">
                                         {getChatName(currentChat)}
@@ -270,7 +252,7 @@ export default function ChatRoom() {
                                     <div className="text-sm text-gray-500">
                                         {currentChat.type === 'group'
                                             ? `${currentChat.participants.length} members`
-                                            : 'Private chat'}
+                                            : ''}
                                     </div>
                                 </div>
                             </div>
@@ -283,59 +265,13 @@ export default function ChatRoom() {
                                     No messages yet. Start the conversation!
                                 </div>
                             ) : (
-                                messages.map((message) => {
-                                    const isMine =
-                                        typeof message.senderId === 'string'
-                                            ? message.senderId === user?._id
-                                            : message.senderId._id ===
-                                              user?._id;
-
-                                    return (
-                                        <div
-                                            key={message._id}
-                                            className={`flex ${
-                                                isMine
-                                                    ? 'justify-end'
-                                                    : 'justify-start'
-                                            }`}
-                                        >
-                                            <div
-                                                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                                                    isMine
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-white border border-gray-200 text-gray-800'
-                                                }`}
-                                            >
-                                                {message.text && (
-                                                    <p className="break-words">
-                                                        {message.text}
-                                                    </p>
-                                                )}
-                                                {message.image && (
-                                                    <img
-                                                        src={message.image}
-                                                        alt="attachment"
-                                                        className="mt-2 rounded max-w-full"
-                                                    />
-                                                )}
-                                                <div
-                                                    className={`text-xs mt-1 ${
-                                                        isMine
-                                                            ? 'text-blue-100'
-                                                            : 'text-gray-500'
-                                                    }`}
-                                                >
-                                                    {new Date(
-                                                        message.createdAt,
-                                                    ).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })
+                                messages.map((message) => (
+                                    <MessageBubble
+                                        key={message._id}
+                                        message={message}
+                                        currentUser={user}
+                                    />
+                                ))
                             )}
                             {getTypingUsers().length > 0 && (
                                 <div className="text-sm text-gray-500 italic">
@@ -361,24 +297,19 @@ export default function ChatRoom() {
                                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                     disabled={sending}
                                 />
-                                <button
+                                <Button
                                     type="submit"
                                     disabled={!messageText.trim() || sending}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+                                    loading={sending}
                                 >
-                                    {sending ? '...' : 'Send'}
-                                </button>
+                                    Send
+                                </Button>
                             </form>
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-gray-500">
-                        <div className="text-center">
-                            <p className="text-lg mb-2">
-                                Welcome to Waffle Chat!
-                            </p>
-                            <p>Select a chat to start messaging</p>
-                        </div>
+                    <div className="flex-1 flex items-center justify-center">
+                        <EmptyState message="Welcome to Waffle Chat! Select a chat to start messaging" />
                     </div>
                 )}
             </div>
