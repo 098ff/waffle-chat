@@ -47,7 +47,7 @@ export default function Register() {
                         user: {
                             _id: data._id,
                             email: data.email,
-                            fullName: data.name,
+                            fullName: data.fullName,
                             createdAt: new Date().toISOString(),
                         },
                         token: data.token,
