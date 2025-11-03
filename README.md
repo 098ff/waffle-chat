@@ -41,35 +41,38 @@ A full-stack real-time chat application with support for private and group conve
 
 ### 1. Clone the Repository
 
-\`\`\`bash
+```bash
 git clone https://github.com/098ff/waffle-chat.git
 cd waffle-chat
-\`\`\`
+```
+
 
 ### 2. Setup Backend
 
-\`\`\`bash
+```bash
 cd backend
 npm install
+```
 
 # Create .env file
 
-cp config/config.env.example config/config.env
+`cp config/config.env.example config/config.env`
 
-# Edit config/config.env with your MongoDB URI, JWT_SECRET, etc.
+Edit config/config.env with your MongoDB URI, JWT_SECRET, etc.
 
 # Start backend server
 
-npm run dev
-\`\`\`
+`npm run dev`
+
 
 Backend will run on http://localhost:5000
 
 ### 3. Setup Frontend
 
-\`\`\`bash
+```bash
 cd ../frontend
 npm install
+```
 
 # Create .env file
 
@@ -79,8 +82,8 @@ cp .env.example .env
 
 # Start frontend dev server
 
-npm run dev
-\`\`\`
+`npm run dev`
+
 
 Frontend will run on http://localhost:5173
 
@@ -131,7 +134,7 @@ Frontend will run on http://localhost:5173
 
 ## Project Structure
 
-\`\`\`
+```
 waffle-chat/
 ├── backend/
 │ ├── config/ # DB, Socket, Cloudinary config
@@ -148,25 +151,25 @@ waffle-chat/
 │ ├── types/ # TypeScript types
 │ └── App.tsx # Main app
 └── README.md
-\`\`\`
+```
 
 ## Testing
 
 ### Backend
 
 Test backend with the provided socket test script:
-\`\`\`bash
+```bash
 node backend/tests/test-socket.js http://localhost:5000 <JWT_TOKEN> <CHAT_ID>
-\`\`\`
+```
 
 Or use Postman/curl for REST API testing.
 
 ### Frontend
 
-\`\`\`bash
+```bash
 cd frontend
 npm run build # Check for TypeScript errors
-\`\`\`
+```
 
 ## Deployment
 
@@ -194,5 +197,7 @@ npm run build # Check for TypeScript errors
 MIT
 
 ## Author
-
-Created by [@098ff](https://github.com/098ff)
+- [Chanatda Konchom](https://github.com/098ff)
+- [Chatrin Yoonchalard](https://github.com/Mysterioucz)
+- [Chayut Archamongkol]()
+- [Suvijak]()
