@@ -15,11 +15,9 @@ const createChat = async (req, res) => {
     if (type === 'private') {
       // participants should be an array with exactly one other user
       if (!Array.isArray(participants) || participants.length !== 1) {
-        return res
-          .status(400)
-          .json({
-            message: 'Private chat requires exactly one other participant',
-          });
+        return res.status(400).json({
+          message: 'Private chat requires exactly one other participant',
+        });
       }
       const otherId = participants[0];
 
@@ -147,8 +145,9 @@ const postMessageToChat = async (req, res) => {
 
     // Broadcast via socket if possible
     try {
-      const { io } = require('../config/socket.js');
-      io.to(chatId).emit('message:new', newMessage);
+      const { getIo } = require('../config/socket');
+      const io = getIo();
+      if (io) io.to(chatId).emit('message:new', newMessage);
     } catch (socketErr) {
       // ignore socket errors here
     }
