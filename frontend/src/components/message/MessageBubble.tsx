@@ -1,4 +1,4 @@
-import type { Message, User } from '../types';
+import type { Message, User } from '../../types';
 
 interface MessageBubbleProps {
     message: Message;

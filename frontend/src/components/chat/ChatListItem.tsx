@@ -1,6 +1,6 @@
 'use client';
-import type { Chat, User } from '../types';
-import UserAvatar from './UserAvatar';
+import type { Chat, User } from '../../types';
+import UserAvatar from '../UserAvatar';
 
 interface ChatListItemProps {
     chat: Chat;
