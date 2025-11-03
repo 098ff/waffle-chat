@@ -9,6 +9,7 @@ import type { AppDispatch } from '../store';
 import AuthLayout from '../components/AuthLayout';
 import InputField from '../components/InputField';
 import Button from '../components/Button';
+import type { User } from '../types';
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -18,6 +19,10 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
+
+    const setLocalStorageUser = (user: User) => {
+        localStorage.setItem('user', JSON.stringify(user));
+    };
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -30,17 +35,19 @@ export default function Login() {
             });
 
             if (data.success) {
+                const user: User = {
+                    _id: data._id,
+                    email: data.email,
+                    fullName: data.name,
+                    createdAt: new Date().toISOString(),
+                };
                 dispatch(
                     setCredentials({
-                        user: {
-                            _id: data._id,
-                            email: data.email,
-                            fullName: data.name,
-                            createdAt: new Date().toISOString(),
-                        },
+                        user: user,
                         token: data.token,
                     }),
                 );
+                setLocalStorageUser(user);
                 toast.success('Login successful!');
                 navigate('/chats');
             }

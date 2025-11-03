@@ -13,7 +13,6 @@ export default function MessageBubble({
         typeof message.senderId === 'string'
             ? message.senderId === currentUser?._id
             : message.senderId._id === currentUser?._id;
-
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
             <div
