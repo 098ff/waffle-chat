@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { chatAPI } from '../services/api';
+import { chatAPI, messageAPI } from '../services/api';
 import { socketService } from '../services/socket';
 import {
     setChats,
@@ -14,7 +14,7 @@ import {
 import { logout } from '../store/authSlice';
 import { toast } from 'react-toastify';
 import type { RootState, AppDispatch } from '../store';
-import type { Chat, Message } from '../types';
+import type { Chat, Message, User } from '../types';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import ChatHeader from '../components/chat/ChatHeader';
 import MessageList from '../components/message/MessageList';
@@ -23,13 +23,13 @@ import EmptyState from '../components/EmptyState';
 
 export default function ChatRoom() {
     const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
     const { user, token } = useSelector((state: RootState) => state.auth);
-    const { chats, currentChat, messages, typingUsers } = useSelector(
-        (state: RootState) => state.chat,
-    );
+    const { chats, currentChat, messages, typingUsers, onlineUsers } =
+        useSelector((state: RootState) => state.chat);
 
     useEffect(() => {
         if (!token) {
@@ -38,6 +38,7 @@ export default function ChatRoom() {
         }
 
         loadChats();
+        loadAllUsers();
         initializeSocket();
 
         return () => {
@@ -84,6 +85,15 @@ export default function ChatRoom() {
             }
         } catch (error) {
             toast.error('Failed to load chats');
+        }
+    };
+
+    const loadAllUsers = async () => {
+        try {
+            const { data } = await messageAPI.getAllContacts();
+            setAllUsers([...data, user]);
+        } catch (error) {
+            console.error('Failed to load users');
         }
     };
 
@@ -160,13 +170,33 @@ export default function ChatRoom() {
         return typingUsers[currentChat._id] || [];
     };
 
+    const isOnline = (chat: Chat) => {
+        if (chat.type === 'group') {
+            // Check if ANY participant in the group is online (excluding current user)
+            return chat.participants.some((p) => {
+                const userId = p.user.trim();
+                const isUserOnline =
+                    userId !== user?._id && onlineUsers.includes(userId);
+                return isUserOnline;
+            });
+        } else {
+            // For private chat, check if the other user is online
+            const otherUserId =
+                chat.participants.find((p) => p.user !== user?._id)?.user || '';
+            return onlineUsers.includes(otherUserId.trim());
+        }
+    };
+
     return (
         <div className="h-screen flex bg-gray-50">
             <ChatSidebar
                 chats={chats}
                 currentChat={currentChat}
                 user={user}
+                onlineUserIds={onlineUsers}
+                allUsers={allUsers}
                 onChatSelect={(chat) => dispatch(setCurrentChat(chat))}
+                isOnline={isOnline}
                 onLogout={handleLogout}
             />
 
@@ -176,6 +206,7 @@ export default function ChatRoom() {
                         <ChatHeader
                             chat={currentChat}
                             chatName={getChatName(currentChat)}
+                            online={isOnline(currentChat)}
                         />
 
                         <MessageList

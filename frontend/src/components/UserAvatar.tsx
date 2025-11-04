@@ -10,7 +10,7 @@ interface UserAvatarProps {
 export default function UserAvatar({
     name,
     size = 'md',
-    online,
+    online = false,
 }: UserAvatarProps) {
     const sizeClasses = {
         sm: 'w-8 h-8 text-sm',
@@ -32,22 +32,21 @@ export default function UserAvatar({
             'from-teal-400 to-teal-600',
         ];
         return colors[charCode % colors.length];
-
-    }
+    };
     return (
         <div className="relative shrink-0">
             <div
-                className={`${sizeClasses[size]} rounded-full bg-linear-to-br ${avatarColor()} flex items-center justify-center text-white font-semibold`}
+                className={`${
+                    sizeClasses[size]
+                } rounded-full bg-linear-to-br ${avatarColor()} flex items-center justify-center text-white font-semibold`}
             >
                 {initial}
             </div>
-            {online !== undefined && (
-                <div
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                        online ? 'bg-green-500' : 'bg-gray-400'
-                    }`}
-                />
-            )}
+            <div
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                    online ? 'bg-green-500' : 'bg-gray-400'
+                }`}
+            />
         </div>
     );
 }
