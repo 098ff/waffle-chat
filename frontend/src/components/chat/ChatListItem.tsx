@@ -6,6 +6,7 @@ interface ChatListItemProps {
     chat: Chat;
     currentUser: User | null;
     isActive: boolean;
+    online: boolean;
     onClick: () => void;
 }
 
@@ -13,6 +14,7 @@ export default function ChatListItem({
     chat,
     currentUser,
     isActive,
+    online,
     onClick,
 }: ChatListItemProps) {
     const getChatName = (chat: Chat) => {
@@ -38,7 +40,7 @@ export default function ChatListItem({
             }`}
         >
             <div className="flex items-center gap-4">
-                <UserAvatar name={chatName} size="md" />
+                <UserAvatar name={chatName} size="md" online={online} />
                 <div className="ml-3 flex-1 overflow-hidden">
                     <span className="font-medium text-gray-800 truncate">
                         {chatName}

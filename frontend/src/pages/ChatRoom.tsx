@@ -170,6 +170,22 @@ export default function ChatRoom() {
         return typingUsers[currentChat._id] || [];
     };
 
+    const isOnline = (chat: Chat) => {
+        if (chat.type === 'group') {
+            chat.participants.forEach((p) => {
+                console.log(`Group ${chat._id} p.user: ${p.user}`);
+                if (onlineUsers.includes(p.user)) {
+                    return true;
+                }
+            });
+            return false;
+        } else {
+            return onlineUsers.includes(
+                chat.participants.find((p) => p.user !== user?._id)?.user || '',
+            );
+        }
+    };
+
     return (
         <div className="h-screen flex bg-gray-50">
             <ChatSidebar
@@ -179,6 +195,7 @@ export default function ChatRoom() {
                 onlineUserIds={onlineUsers}
                 allUsers={allUsers}
                 onChatSelect={(chat) => dispatch(setCurrentChat(chat))}
+                isOnline={isOnline}
                 onLogout={handleLogout}
             />
 
@@ -188,6 +205,13 @@ export default function ChatRoom() {
                         <ChatHeader
                             chat={currentChat}
                             chatName={getChatName(currentChat)}
+                            online={onlineUsers.includes(
+                                currentChat.type === 'private'
+                                    ? currentChat.participants.find(
+                                          (p) => p.user !== user?._id,
+                                      )?.user || ''
+                                    : '',
+                            )}
                         />
 
                         <MessageList
