@@ -12,6 +12,7 @@ interface ChatSidebarProps {
     onlineUserIds: string[];
     allUsers: User[];
     onChatSelect: (chat: Chat) => void;
+    isOnline: (chat: Chat) => boolean;
     onLogout: () => void;
 }
 
@@ -22,9 +23,11 @@ export default function ChatSidebar({
     onlineUserIds,
     allUsers,
     onChatSelect,
+    isOnline,
     onLogout,
 }: ChatSidebarProps) {
     const navigate = useNavigate();
+    
     const [showOnlineModal, setShowOnlineModal] = useState(false);
 
     return (
@@ -90,6 +93,7 @@ export default function ChatSidebar({
                             chat={chat}
                             currentUser={user}
                             isActive={currentChat?._id === chat._id}
+                            online={isOnline(chat)}
                             onClick={() => onChatSelect(chat)}
                         />
                     ))

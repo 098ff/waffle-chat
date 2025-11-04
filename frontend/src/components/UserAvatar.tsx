@@ -4,7 +4,7 @@ interface UserAvatarProps {
     user?: User | string;
     name: string;
     size?: 'sm' | 'md' | 'lg';
-    online?: boolean;
+    online: boolean;
 }
 
 export default function UserAvatar({

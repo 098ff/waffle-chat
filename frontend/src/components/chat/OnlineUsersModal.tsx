@@ -44,8 +44,6 @@ export default function OnlineUsersModal({
     const onlineUsers = allUsers.filter((user) =>
         onlineUserIds.includes(user._id),
     );
-    console.log('allUsers:', allUsers);
-    console.log('onlineUserIds:', onlineUserIds);
     if (!isOpen) return null;
 
     return (
@@ -83,8 +81,8 @@ export default function OnlineUsersModal({
                                         <UserAvatar
                                             name={user.fullName}
                                             size="md"
+                                            online={true}
                                         />
-                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                                     </div>
                                     <div>
                                         <div className="font-medium text-gray-800">
