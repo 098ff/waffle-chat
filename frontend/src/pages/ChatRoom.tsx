@@ -172,17 +172,18 @@ export default function ChatRoom() {
 
     const isOnline = (chat: Chat) => {
         if (chat.type === 'group') {
-            chat.participants.forEach((p) => {
-                console.log(`Group ${chat._id} p.user: ${p.user}`);
-                if (onlineUsers.includes(p.user)) {
-                    return true;
-                }
+            // Check if ANY participant in the group is online (excluding current user)
+            return chat.participants.some((p) => {
+                const userId = p.user.trim();
+                const isUserOnline =
+                    userId !== user?._id && onlineUsers.includes(userId);
+                return isUserOnline;
             });
-            return false;
         } else {
-            return onlineUsers.includes(
-                chat.participants.find((p) => p.user !== user?._id)?.user || '',
-            );
+            // For private chat, check if the other user is online
+            const otherUserId =
+                chat.participants.find((p) => p.user !== user?._id)?.user || '';
+            return onlineUsers.includes(otherUserId.trim());
         }
     };
 
@@ -205,13 +206,7 @@ export default function ChatRoom() {
                         <ChatHeader
                             chat={currentChat}
                             chatName={getChatName(currentChat)}
-                            online={onlineUsers.includes(
-                                currentChat.type === 'private'
-                                    ? currentChat.participants.find(
-                                          (p) => p.user !== user?._id,
-                                      )?.user || ''
-                                    : '',
-                            )}
+                            online={isOnline(currentChat)}
                         />
 
                         <MessageList
