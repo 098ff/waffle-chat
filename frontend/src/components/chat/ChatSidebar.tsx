@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Chat, User } from '../../types';
 import ChatListItem from './ChatListItem';
 import EmptyState from '../EmptyState';
+import OnlineUsersModal from './OnlineUsersModal';
 
 interface ChatSidebarProps {
     chats: Chat[];
     currentChat: Chat | null;
     user: User | null;
+    onlineUserIds: string[];
+    allUsers: User[];
     onChatSelect: (chat: Chat) => void;
     onLogout: () => void;
 }
@@ -15,10 +19,13 @@ export default function ChatSidebar({
     chats,
     currentChat,
     user,
+    onlineUserIds,
+    allUsers,
     onChatSelect,
     onLogout,
 }: ChatSidebarProps) {
     const navigate = useNavigate();
+    const [showOnlineModal, setShowOnlineModal] = useState(false);
 
     return (
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
@@ -42,11 +49,30 @@ export default function ChatSidebar({
                         </button>
                     </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                    Logged in as:{' '}
-                    <span className="font-medium">{user?.fullName}</span>
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                    <div>
+                        Logged in as:{' '}
+                        <span className="font-medium">{user?.fullName}</span>
+                    </div>
+                    <button
+                        onClick={() => setShowOnlineModal(true)}
+                        className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                        title="View online users"
+                    >
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="font-medium">
+                            {onlineUserIds.length}
+                        </span>
+                    </button>
                 </div>
             </div>
+
+            <OnlineUsersModal
+                isOpen={showOnlineModal}
+                onClose={() => setShowOnlineModal(false)}
+                onlineUserIds={onlineUserIds}
+                allUsers={allUsers}
+            />
 
             <div className="flex-1 overflow-y-auto">
                 {chats.length === 0 ? (
