@@ -46,7 +46,7 @@ const chatSlice = createSlice({
             state.messages.push(action.payload);
         },
         setOnlineUsers: (state, action: PayloadAction<string[]>) => {
-            state.onlineUsers = action.payload;
+            state.onlineUsers = action.payload.map((user) => user.trim());
         },
         setTyping: (
             state,
@@ -76,7 +76,7 @@ const chatSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder.addCase(logout, () => initialState);
-    }
+    },
 });
 
 export const {

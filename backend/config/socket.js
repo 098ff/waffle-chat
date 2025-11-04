@@ -30,7 +30,7 @@ async function initSocket(server) {
       userSocketMap[userId] = socket.id;
       console.log('Socket connected for user', userId);
 
-      // emit online users
+      // emit online users to all connected clients
       io.emit('getOnlineUsers', Object.keys(userSocketMap));
 
       // auto-join user's chats
