@@ -64,3 +64,19 @@ export interface SendMessagePayload {
     text?: string;
     image?: string;
 }
+
+export type Invitation = {
+  _id: string;
+  chat: {
+    _id: string;
+    name: string;
+    type: string;
+  };
+  inviter: {
+    _id: string;
+    fullName: string;
+    email?: string;
+  };
+  status: 'pending' | 'accepted' | 'rejected';
+};
+
