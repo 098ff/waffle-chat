@@ -68,11 +68,6 @@ const createChat = async (req, res) => {
 
     const uniqueParticipantIds = Array.from(new Set(allParticipantIds));
 
-    const participantsDocs = uniqueParticipantIds.map((pId) => ({
-      user: pId,
-      role: pId === creatorIdStr ? 'admin' : 'member',
-    }));
-
     const participantsSorted = [...uniqueParticipantIds].sort().join('_');
 
     let existingGroupChat = await Chat.findOne({
