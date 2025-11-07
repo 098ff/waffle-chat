@@ -33,11 +33,9 @@ const acceptInvitation = async (req, res) => {
       return res.status(400).json({ message: 'Invitation already handled' });
     }
 
-    // ✅ อัปเดตสถานะ invitation
     invitation.status = 'accepted';
     await invitation.save();
 
-    // ✅ เพิ่ม user เข้า chat participants
     const chat = await Chat.findById(invitation.chat);
     chat.participants.push({ user: userId, role: 'member' });
     await chat.save();
