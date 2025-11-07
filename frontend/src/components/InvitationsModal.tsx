@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { chatAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import type { Invitation } from '../types';
 import Button from './Button';
 
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function InvitationsModal({ open, onClose }: Props) {
+  const navigate = useNavigate();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +36,9 @@ export default function InvitationsModal({ open, onClose }: Props) {
       await chatAPI.acceptInvitation(id);
       toast.success('Invitation accepted');
       setInvitations((prev) => prev.filter((inv) => inv._id !== id));
+
+      onClose();
+      window.location.reload();
     } catch (err) {
       toast.error('Failed to accept invitation');
     }
