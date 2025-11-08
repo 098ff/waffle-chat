@@ -123,13 +123,19 @@ async function initSocket(server) {
             text,
             image: imageUrl,
           });
+          
+          // populate sender before emitting
+          const populatedMessage = await Message.findById(newMessage._id).populate(
+            'senderId',
+            'fullName profilePic',
+          );
 
           // update lastMessage on chat
           chat.lastMessage = newMessage._id;
           await chat.save();
 
-          io.to(chatId).emit('message:new', newMessage);
-          return callback && callback({ status: 'ok', message: newMessage });
+          io.to(chatId).emit('message:new', populatedMessage);
+          return callback && callback({ status: 'ok', message: populatedMessage });
         } catch (err) {
           console.error('message:create error', err.message);
           return callback && callback({ status: 'error' });
