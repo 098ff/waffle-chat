@@ -71,17 +71,8 @@ const createChat = async (req, res) => {
       role: pId === creatorIdStr ? 'admin' : 'member',
     }));
 
-    const participantsSorted = [...uniqueParticipantIds].sort().join('_');
-
-    let existingGroupChat = await Chat.findOne({
-      type: 'group',
-      participantsSorted,
-    });
-    if (existingGroupChat) {
-      return res
-        .status(400)
-        .json({ message: ErrorMessages.CHAT_ALREADY_EXISTS });
-    }
+    const participantsSortedBase = [...uniqueParticipantIds].sort().join('_');
+    const participantsSorted = `${participantsSortedBase}_${creatorIdStr}_${Date.now()}`;
 
     const chat = await Chat.create({
       type: 'group',
