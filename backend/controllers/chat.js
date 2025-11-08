@@ -71,17 +71,8 @@ const createChat = async (req, res) => {
       role: pId === creatorIdStr ? 'admin' : 'member',
     }));
 
-    const participantsSorted = [...uniqueParticipantIds].sort().join('_');
-
-    let existingGroupChat = await Chat.findOne({
-      type: 'group',
-      participantsSorted,
-    });
-    if (existingGroupChat) {
-      return res
-        .status(400)
-        .json({ message: ErrorMessages.CHAT_ALREADY_EXISTS });
-    }
+    const participantsSortedBase = [...uniqueParticipantIds].sort().join('_');
+    const participantsSorted = `${participantsSortedBase}_${creatorIdStr}_${Date.now()}`;
 
     const chat = await Chat.create({
       type: 'group',
@@ -134,7 +125,10 @@ const getMessagesByChatId = async (req, res) => {
     if (!isMember)
       return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
 
-    const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
+    const messages = await Message.find({ chatId }).sort({ createdAt: 1 }).populate(
+      'senderId',
+      'fullName profilePic',
+    );
     res.status(200).json(messages);
   } catch (err) {
     console.error('getMessagesByChatId', err.message);
@@ -173,6 +167,12 @@ const postMessageToChat = async (req, res) => {
       image: imageUrl,
     });
 
+    // populate senderId before broadcasting / returning
+    const populatedMessage = await Message.findById(newMessage._id).populate(
+      'senderId',
+      'fullName profilePic',
+    );
+
     // update lastMessage
     chat.lastMessage = newMessage._id;
     await chat.save();
@@ -181,12 +181,12 @@ const postMessageToChat = async (req, res) => {
     try {
       const { getIo } = require('../config/socket');
       const io = getIo();
-      if (io) io.to(chatId).emit('message:new', newMessage);
+      if (io) io.to(chatId).emit('message:new', populatedMessage);
     } catch (socketErr) {
       // ignore socket errors here
     }
 
-    res.status(201).json(newMessage);
+    res.status(201).json(populatedMessage);
   } catch (err) {
     console.error('postMessageToChat', err.message);
     res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
