@@ -247,7 +247,9 @@ const getChatMembers = async (req, res) => {
       fullName: user.fullName,
     }));
 
-    
+    // Sort alphabetically by fullName
+    formattedMembers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+
     res.status(200).json(formattedMembers);
   } catch (err) {
     console.error('getMembers', err.message);
