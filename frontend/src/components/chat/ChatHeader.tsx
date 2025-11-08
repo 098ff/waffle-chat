@@ -1,13 +1,53 @@
+import { useEffect, useState } from 'react';
 import type { Chat } from '../../types';
 import UserAvatar from '../UserAvatar';
+import { chatAPI } from '../../services/api';
 
 interface ChatHeaderProps {
     chat: Chat;
     chatName: string;
     online: boolean;
+    onlineUserIds: string[];
 }
 
+interface Member {
+    id: string;
+    fullName: string;
+    online: boolean;
+}
+
+
 export default function ChatHeader({ chat, chatName, online }: ChatHeaderProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [members, setMembers] = useState<Member[]>([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+    
+    const handleClick = () => {
+        if (chat.type === "group") {
+            setIsModalOpen(true);
+        }
+    };
+
+    useEffect(() => {
+        if (! isModalOpen) return;
+        const fetchMembers = async () => {
+            setLoadingMembers(true);
+
+            try {
+                const { data } = await chatAPI.getChatMembers(chat._id);
+                console.log(data)
+                setMembers(data);
+            } catch (err) {
+                console.error('Failed to fetch members');
+            } finally {
+                setLoadingMembers(false);
+            }
+        };
+
+
+        fetchMembers();
+    }, [isModalOpen, chat._id]);
+    
     return (
         <>
         <div className="bg-white border-b border-gray-200 p-4">
@@ -25,6 +65,7 @@ export default function ChatHeader({ chat, chatName, online }: ChatHeaderProps) 
                 </div>
             </div>
         </div>
+
         {/* Modal */}
         {isModalOpen && (
         <div
