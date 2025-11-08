@@ -16,17 +16,11 @@ interface Member {
     online: boolean;
 }
 
-
-export default function ChatHeader({ chat, chatName, online }: ChatHeaderProps) {
+export default function ChatHeader({ chat, chatName, online, onlineUserIds }: ChatHeaderProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [members, setMembers] = useState<Member[]>([]);
     const [loadingMembers, setLoadingMembers] = useState(false);
-    
-    const handleClick = () => {
-        if (chat.type === "group") {
-            setIsModalOpen(true);
-        }
-    };
+
 
     useEffect(() => {
         if (! isModalOpen) return;
@@ -47,10 +41,19 @@ export default function ChatHeader({ chat, chatName, online }: ChatHeaderProps) 
 
         fetchMembers();
     }, [isModalOpen, chat._id]);
-    
+
+    const handleClick = () => {
+        if (chat.type === "group") {
+            setIsModalOpen(true);
+        }
+    };
+
+
     return (
         <>
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white border-b border-gray-200 p-4"
+        onClick={handleClick}
+        >
             <div className="flex items-center">
                 <UserAvatar name={chatName} size="md" online={online} />
                 <div className="ml-3">
@@ -104,6 +107,7 @@ export default function ChatHeader({ chat, chatName, online }: ChatHeaderProps) 
             </div>
         </div>
         )}
+
         </>
     );
 }
