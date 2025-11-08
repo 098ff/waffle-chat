@@ -207,6 +207,7 @@ export default function ChatRoom() {
                             chat={currentChat}
                             chatName={getChatName(currentChat)}
                             online={isOnline(currentChat)}
+                            onlineUserIds={onlineUsers}
                         />
 
                         <MessageList
