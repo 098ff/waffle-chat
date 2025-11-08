@@ -39,10 +39,18 @@ export const chatAPI = {
         name?: string;
         participants: string[];
     }) => api.post('/chats', data),
+
     getChats: () => api.get('/chats'),
+
     getChatMessages: (chatId: string) => api.get(`/chats/${chatId}/messages`),
+
     sendMessage: (chatId: string, data: { text?: string; image?: string }) =>
         api.post(`/chats/${chatId}/messages`, data),
+
+    // Invitation endpoints
+    getInvitations: () => api.get('/chats/invitations'),
+    acceptInvitation: (id: string) => api.put(`/chats/invitations/${id}/accept`),
+    rejectInvitation: (id: string) => api.put(`/chats/invitations/${id}/reject`),
 };
 
 // Message endpoints

@@ -2,6 +2,8 @@ const { ErrorMessages } = require('../helper/error.js');
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const Invitation = require('../models/Invitation');
+
 
 // Create a chat (private or group)
 const createChat = async (req, res) => {
@@ -77,12 +79,34 @@ const createChat = async (req, res) => {
     const chat = await Chat.create({
       type: 'group',
       name: name || 'Group chat',
-      participants: participantsDocs,
+      participants: [
+        {
+          user: creator,
+          role: 'admin',
+        },
+      ],
       createdBy: creator,
-      participantsSorted: participantsSorted, 
+      participantsSorted: participantsSorted,
     });
 
-    res.status(201).json(chat);
+    const invitees = participants.filter(
+      (p) => p.toString() !== creatorIdStr
+    );
+
+    for (const invitee of invitees) {
+      await Invitation.create({
+        chat: chat._id,
+        inviter: creator,
+        invitee,
+        status: 'pending',
+      });
+    }
+
+    return res.status(201).json({
+      ...chat.toObject(),
+      invitationsSent: invitees.length,
+    });
+
   } catch (err) {
     console.error('createChat error', err);
     if (err.code === 11000) {

@@ -4,6 +4,7 @@ import type { Chat, User } from '../../types';
 import ChatListItem from './ChatListItem';
 import EmptyState from '../EmptyState';
 import OnlineUsersModal from './OnlineUsersModal';
+import InvitationsModal from '../InvitationsModal';
 
 interface ChatSidebarProps {
     chats: Chat[];
@@ -29,6 +30,7 @@ export default function ChatSidebar({
     const navigate = useNavigate();
     
     const [showOnlineModal, setShowOnlineModal] = useState(false);
+    const [showInvitations, setShowInvitations] = useState(false);
 
     return (
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
@@ -42,6 +44,13 @@ export default function ChatSidebar({
                             title="New Chat"
                         >
                             ➕
+                        </button>
+                        <button
+                            onClick={() => setShowInvitations(true)}
+                            className="p-2 outline-2 bg-yellow-300 text-white rounded-lg hover:outline-yellow-700 transition"
+                            title="Invitations"
+                        >
+                            📩
                         </button>
                         <button
                             onClick={onLogout}
@@ -75,6 +84,10 @@ export default function ChatSidebar({
                 onClose={() => setShowOnlineModal(false)}
                 onlineUserIds={onlineUserIds}
                 allUsers={allUsers}
+            />
+            <InvitationsModal
+                open={showInvitations}
+                onClose={() => setShowInvitations(false)}
             />
 
             <div className="flex-1 overflow-y-auto">
