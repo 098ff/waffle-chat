@@ -137,11 +137,13 @@ export default function ChatRoom() {
                     audioData: audioBlob,
                 },
                 (ack: any) => {
+                    console.log('sendAudio ack', ack);
                     if (ack.status === 'ok') {
-                        resolve(); 
+                        resolve();
                     } else {
-                        toast.error('Failed to send audio message');
-                        reject(new Error('Failed to send audio'));
+                        const details = ack.message || ack.details || JSON.stringify(ack);
+                        toast.error('Failed to send audio message: ' + details);
+                        reject(new Error('Failed to send audio: ' + details));
                     }
                 },
             );

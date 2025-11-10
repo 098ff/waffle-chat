@@ -148,84 +148,80 @@ async function initSocket(server) {
           const { chatId, audioData } = payload;
           const userId = socket.userId;
 
-          if (!chatId || !audioData || !(audioData instanceof Buffer)) {
-            return (
-              callback &&
-              callback({ status: 'error', message: 'Invalid payload' })
-            );
+          console.log('[message:audio] incoming payload:', {
+            chatId,
+            audioType: Object.prototype.toString.call(audioData),
+            isBuffer: Buffer.isBuffer(audioData),
+            hasByteLength: audioData && typeof audioData.byteLength === 'number',
+            sampleLength: Array.isArray(audioData) ? audioData.length : undefined,
+          });
+
+          if (!chatId || !audioData) {
+            return callback && callback({ status: 'error', message: 'Invalid payload' });
           }
 
+          // Know type of audioData from above console.log then convert it!
+          let audioBuffer = Buffer.from(new Uint8Array(audioData));
+
           const chat = await Chat.findById(chatId);
-          if (!chat)
-            return (
-              callback &&
-              callback({ status: 'error', message: 'Chat not found' })
-            );
-          const isMember = chat.participants.some(
-            (p) => p.user.toString() === userId.toString(),
-          );
-          if (!isMember)
-            return (
-              callback && callback({ status: 'error', message: 'Not a member' })
-            );
+          if (!chat) return callback && callback({ status: 'error', message: 'Chat not found' });
+
+          const isMember = chat.participants.some((p) => p.user.toString() === userId.toString());
+          if (!isMember) return callback && callback({ status: 'error', message: 'Not a member' });
+
+          // Upload to Cloudinary using streamifier
+          const streamifier = require('streamifier');
+          const cloudinary = require('./cloudinary');
+
+          const uploadAudio = (buffer) => {
+            return new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                  resource_type: 'video',
+                  format: 'webm',
+                },
+                (error, result) => {
+                  if (error) return reject(error);
+                  resolve(result);
+                },
+              );
+              streamifier.createReadStream(buffer).pipe(uploadStream);
+            });
+          };
 
           let audioUrl = null;
           try {
-            const cloudinary = require('./cloudinary');
-            const streamifier = require('streamifier');
-            
-            const uploadAudio = (buffer) => {
-              return new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                  {
-                    resource_type: 'video',
-                    format: 'webm', 
-                  },
-                  (error, result) => {
-                    if (error) return reject(error);
-                    resolve(result);
-                  },
-                );
-                // ส่ง Buffer เข้า stream
-                streamifier.createReadStream(buffer).pipe(uploadStream);
-              });
-            };
-
-            const uploadResponse = await uploadAudio(audioData);
+            const uploadResponse = await uploadAudio(audioBuffer);
+            console.log('[message:audio] upload success', {
+              public_id: uploadResponse.public_id,
+              secure_url: uploadResponse.secure_url,
+            });
             audioUrl = uploadResponse.secure_url;
-
           } catch (e) {
-            console.warn('Audio upload failed', e.message);
-            return callback && callback({ status: 'error', message: 'Upload failed' });
+            console.error('[message:audio] Audio upload failed:', e && e.message, e && e.stack);
+            return callback && callback({ status: 'error', message: 'Upload failed', details: e && e.message });
           }
 
           // create and persist the audio message
-          try {
-            const newMessage = await Message.create({
-              senderId: userId,
-              chatId,
-              audio: audioUrl,
-            });
+          const newMessage = await Message.create({
+            senderId: userId,
+            chatId,
+            audio: audioUrl,
+          });
 
-            // populate sender before emitting
-            const populatedMessage = await Message.findById(newMessage._id).populate(
-              'senderId',
-              'fullName profilePic',
-            );
+          const populatedMessage = await Message.findById(newMessage._id).populate(
+            'senderId',
+            'fullName profilePic',
+          );
 
-            // update lastMessage on chat
-            chat.lastMessage = newMessage._id;
-            await chat.save();
+          chat.lastMessage = newMessage._id;
+          await chat.save();
 
-            io.to(chatId).emit('message:new', populatedMessage);
-            return callback && callback({ status: 'ok', message: populatedMessage });
-          } catch (e) {
-            console.error('message:audio error', e.message);
-            return callback && callback({ status: 'error' });
-          }
+          io.to(chatId).emit('message:new', populatedMessage);
+          return callback && callback({ status: 'ok', message: populatedMessage });
         } catch (err) {
-          console.error('message:audio handler error', err.message);
-          return callback && callback({ status: 'error' });
+          console.error('message:audio handler error', err && err.stack);
+          return callback && callback({ status: 'error', message: 'Server error' });
         }
       });
 

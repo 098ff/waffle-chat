@@ -89,7 +89,20 @@ class SocketService {
         payload: { chatId: string; audioData: Blob },
         callback?: (ack: any) => void,
     ): void {
-        this.socket?.emit('message:audio', payload, callback);
+        const reader = new FileReader();
+        reader.onload = () => {
+            const arrayBuffer = reader.result as ArrayBuffer;
+            // emit raw ArrayBuffer (socket.io supports binary)
+            this.socket?.emit(
+                'message:audio',
+                {
+                    chatId: payload.chatId,
+                    audioData: arrayBuffer,
+                },
+                callback,
+            );
+        };
+        reader.readAsArrayBuffer(payload.audioData);
     }
 
     // Send typing indicator
