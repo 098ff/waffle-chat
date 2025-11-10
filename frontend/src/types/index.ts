@@ -44,6 +44,7 @@ export interface Message {
     chatId?: string;
     text?: string;
     image?: string;
+    audio: any;
     status: 'sent' | 'delivered' | 'read';
     readBy?: Array<{
         userId: string;
