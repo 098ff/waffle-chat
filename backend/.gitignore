@@ -1,4 +1,12 @@
 # ignore all node_modules directories
 node_modules
+
 # ignore config file
 config/config.env
+
+# ignore test coverage
+coverage
+*.lcov
+
+# ignore test database files
+*.test.db
