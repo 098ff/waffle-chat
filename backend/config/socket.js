@@ -142,6 +142,93 @@ async function initSocket(server) {
         }
       });
 
+      // create audio message
+      socket.on('message:audio', async (payload, callback) => {
+        try {
+          const { chatId, audioData } = payload;
+          const userId = socket.userId;
+
+          if (!chatId || !audioData || !(audioData instanceof Buffer)) {
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Invalid payload' })
+            );
+          }
+
+          const chat = await Chat.findById(chatId);
+          if (!chat)
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Chat not found' })
+            );
+          const isMember = chat.participants.some(
+            (p) => p.user.toString() === userId.toString(),
+          );
+          if (!isMember)
+            return (
+              callback && callback({ status: 'error', message: 'Not a member' })
+            );
+
+          let audioUrl = null;
+          try {
+            const cloudinary = require('./cloudinary');
+            const streamifier = require('streamifier');
+            
+            const uploadAudio = (buffer) => {
+              return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                  {
+                    resource_type: 'video',
+                    format: 'webm', 
+                  },
+                  (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                  },
+                );
+                // ส่ง Buffer เข้า stream
+                streamifier.createReadStream(buffer).pipe(uploadStream);
+              });
+            };
+
+            const uploadResponse = await uploadAudio(audioData);
+            audioUrl = uploadResponse.secure_url;
+
+          } catch (e) {
+            console.warn('Audio upload failed', e.message);
+            return callback && callback({ status: 'error', message: 'Upload failed' });
+          }
+
+          // create and persist the audio message
+          try {
+            const newMessage = await Message.create({
+              senderId: userId,
+              chatId,
+              audio: audioUrl,
+            });
+
+            // populate sender before emitting
+            const populatedMessage = await Message.findById(newMessage._id).populate(
+              'senderId',
+              'fullName profilePic',
+            );
+
+            // update lastMessage on chat
+            chat.lastMessage = newMessage._id;
+            await chat.save();
+
+            io.to(chatId).emit('message:new', populatedMessage);
+            return callback && callback({ status: 'ok', message: populatedMessage });
+          } catch (e) {
+            console.error('message:audio error', e.message);
+            return callback && callback({ status: 'error' });
+          }
+        } catch (err) {
+          console.error('message:audio handler error', err.message);
+          return callback && callback({ status: 'error' });
+        }
+      });
+
       socket.on('disconnect', () => {
         delete userSocketMap[userId];
         io.emit('getOnlineUsers', Object.keys(userSocketMap));

@@ -84,6 +84,14 @@ class SocketService {
         this.socket?.emit('message:create', payload, callback);
     }
 
+    // Send an audio message
+    sendAudioMessage(
+        payload: { chatId: string; audioData: Blob },
+        callback?: (ack: any) => void,
+    ): void {
+        this.socket?.emit('message:audio', payload, callback);
+    }
+
     // Send typing indicator
     sendTyping(chatId: string, typing: boolean): void {
         this.socket?.emit('typing', { chatId, typing });

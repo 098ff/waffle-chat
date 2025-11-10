@@ -19,6 +19,7 @@ export default function MessageBubble({
         typeof message.senderId === 'object' && message.senderId
             ? message.senderId.fullName
             : '';
+
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
             <div className="max-w-xs lg:max-w-md">
@@ -35,6 +36,7 @@ export default function MessageBubble({
                     }`}
                 >
                     {message.text && <p className="break-words">{message.text}</p>}
+                    
                     {message.image && (
                         <img
                             src={message.image}
@@ -42,6 +44,15 @@ export default function MessageBubble({
                             className="mt-2 rounded max-w-full"
                         />
                     )}
+
+                    {message.audio && (
+                        <audio
+                            src={message.audio}
+                            controls
+                            className="mt-2 w-full max-w-xs"
+                        />
+                    )}
+                    
                     <div
                         className={`text-xs mt-1 ${
                             isMine ? 'text-blue-100' : 'text-gray-500'
