@@ -1,4 +1,5 @@
 import type { Message, User } from '../../types';
+import AudioPlayer from './AudioPlayer';
 
 interface MessageBubbleProps {
     message: Message;
@@ -14,7 +15,6 @@ export default function MessageBubble({
             ? message.senderId === currentUser?._id
             : message.senderId._id === currentUser?._id;
 
-    // sender name when sender object is present and not the current user
     const senderName =
         typeof message.senderId === 'object' && message.senderId
             ? message.senderId.fullName
@@ -46,11 +46,7 @@ export default function MessageBubble({
                     )}
 
                     {message.audio && (
-                        <audio
-                            src={message.audio}
-                            controls
-                            className="mt-2 w-full max-w-xs"
-                        />
+                        <AudioPlayer audioUrl={message.audio} isMine={isMine} />
                     )}
                     
                     <div
