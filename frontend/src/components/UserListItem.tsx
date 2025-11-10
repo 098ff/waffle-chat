@@ -1,4 +1,5 @@
 import type { User } from '../types';
+import UserAvatar from './UserAvatar';
 
 interface UserListItemProps {
     user: User;
@@ -24,9 +25,11 @@ export default function UserListItem({
             />
             <div className="ml-3 flex-1">
                 <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
-                        {user.fullName.charAt(0).toUpperCase()}
-                    </div>
+                    <UserAvatar 
+                        name={user.fullName}
+                        profilePic={user.profilePic}
+                        size="md"
+                    />
                     <div className="ml-3">
                         <div className="font-medium text-gray-800">
                             {user.fullName}

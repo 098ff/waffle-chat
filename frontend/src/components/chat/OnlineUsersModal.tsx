@@ -80,6 +80,7 @@ export default function OnlineUsersModal({
                                     <div className="relative">
                                         <UserAvatar
                                             name={user.fullName}
+                                            profilePic={user.profilePic}
                                             size="md"
                                             online={true}
                                         />

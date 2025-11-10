@@ -22,6 +22,7 @@ A full-stack real-time chat application with support for private and group conve
 - Socket.IO (WebSocket)
 - JWT Authentication
 - Cloudinary (Image uploads)
+- Multer (File Upload)
 
 ### Frontend
 
