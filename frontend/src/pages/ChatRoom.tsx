@@ -175,9 +175,7 @@ export default function ChatRoom() {
             // Check if ANY participant in the group is online (excluding current user)
             return chat.participants.some((p) => {
                 const userId = p.user.trim();
-                const isUserOnline =
-                    userId !== user?._id && onlineUsers.includes(userId);
-                return isUserOnline;
+                return onlineUsers.includes(userId);
             });
         } else {
             // For private chat, check if the other user is online
@@ -207,6 +205,7 @@ export default function ChatRoom() {
                             chat={currentChat}
                             chatName={getChatName(currentChat)}
                             online={isOnline(currentChat)}
+                            onlineUserIds={onlineUsers}
                         />
 
                         <MessageList

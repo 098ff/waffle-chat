@@ -217,9 +217,50 @@ const postMessageToChat = async (req, res) => {
   }
 };
 
+// Get members of the group chat
+const getChatMembers = async (req, res) => {
+  try {
+    const { id: chatId } = req.params;
+    const userId = req.user._id;
+
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
+    }
+
+    // ensure user is participant
+    const isMember = chat.participants.some(
+      (p) => p.user.toString() === userId.toString(),
+    );
+    if (!isMember) {
+      return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
+    }
+
+    const participantIds = chat.participants.map((p) => p.user);
+
+    // Fetch user details for each participant
+    const members = await User.find({ _id: { $in: participantIds } }).select('fullName');
+
+    const formattedMembers = members.map((user) => ({
+      id: user._id,
+      fullName: user.fullName,
+    }));
+
+    // Sort alphabetically by fullName
+    formattedMembers.sort((a, b) => a.fullName.localeCompare(b.fullName));
+
+    res.status(200).json(formattedMembers);
+  } catch (err) {
+    console.error('getMembers', err.message);
+    res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
+  }
+};
+
 module.exports = {
   createChat,
   getChatsForUser,
   getMessagesByChatId,
   postMessageToChat,
+  getChatMembers,
 };

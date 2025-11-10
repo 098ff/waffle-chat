@@ -51,6 +51,7 @@ export const chatAPI = {
     getInvitations: () => api.get('/chats/invitations'),
     acceptInvitation: (id: string) => api.put(`/chats/invitations/${id}/accept`),
     rejectInvitation: (id: string) => api.put(`/chats/invitations/${id}/reject`),
+    getChatMembers: (chatId: string) => api.get(`/chats/${chatId}`),
 };
 
 // Message endpoints

@@ -5,6 +5,8 @@ const { ErrorMessages } = require('../helper/error.js');
 const getInvitationsForUser = async (req, res) => {
   try {
     const userId = req.user._id;
+    console.log("USERRID:", req.user._id)
+    console.log("CALLED")
     const invitations = await Invitation.find({
       invitee: userId,
       status: 'pending',
