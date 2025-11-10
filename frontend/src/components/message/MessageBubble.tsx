@@ -1,4 +1,5 @@
 import type { Message, User } from '../../types';
+import AudioPlayer from './AudioPlayer';
 
 interface MessageBubbleProps {
     message: Message;
@@ -14,11 +15,11 @@ export default function MessageBubble({
             ? message.senderId === currentUser?._id
             : message.senderId._id === currentUser?._id;
 
-    // sender name when sender object is present and not the current user
     const senderName =
         typeof message.senderId === 'object' && message.senderId
             ? message.senderId.fullName
             : '';
+
     return (
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
             <div className="max-w-xs lg:max-w-md">
@@ -35,6 +36,7 @@ export default function MessageBubble({
                     }`}
                 >
                     {message.text && <p className="break-words">{message.text}</p>}
+                    
                     {message.image && (
                         <img
                             src={message.image}
@@ -42,6 +44,11 @@ export default function MessageBubble({
                             className="mt-2 rounded max-w-full"
                         />
                     )}
+
+                    {message.audio && (
+                        <AudioPlayer audioUrl={message.audio} isMine={isMine} />
+                    )}
+                    
                     <div
                         className={`text-xs mt-1 ${
                             isMine ? 'text-blue-100' : 'text-gray-500'

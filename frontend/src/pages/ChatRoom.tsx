@@ -127,6 +127,29 @@ export default function ChatRoom() {
         });
     };
 
+    const handleSendAudio = async (audioBlob: Blob) => {
+        if (!currentChat) return;
+
+        return new Promise<void>((resolve, reject) => {
+            socketService.sendAudioMessage(
+                {
+                    chatId: currentChat._id,
+                    audioData: audioBlob,
+                },
+                (ack: any) => {
+                    console.log('sendAudio ack', ack);
+                    if (ack.status === 'ok') {
+                        resolve();
+                    } else {
+                        const details = ack.message || ack.details || JSON.stringify(ack);
+                        toast.error('Failed to send audio message: ' + details);
+                        reject(new Error('Failed to send audio: ' + details));
+                    }
+                },
+            );
+        });
+    };
+
     const handleTyping = () => {
         if (!currentChat) return;
 
@@ -217,6 +240,7 @@ export default function ChatRoom() {
                         <MessageInput
                             onSendMessage={handleSendMessage}
                             onTyping={handleTyping}
+                            onSendAudio={handleSendAudio}
                         />
                     </>
                 ) : (
