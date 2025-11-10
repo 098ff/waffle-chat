@@ -1,5 +1,6 @@
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../config/config.env') });
+require('dotenv').config({
+  path: './config/config.env',
+});
 
 const { v2: cloudinary } = require('cloudinary');
 

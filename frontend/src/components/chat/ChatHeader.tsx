@@ -60,7 +60,7 @@ export default function ChatHeader({ chat, chatName, online, onlineUserIds }: Ch
                     <div className="font-semibold text-gray-800">
                         {chatName}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 cursor-pointer">
                         {chat.type === 'group'
                             ? `${chat.participants.length} members`
                             : ''}

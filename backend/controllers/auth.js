@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { ErrorMessages } = require('../helper/error.js');
+const cloudinary = require('../config/cloudinary');
 
 const sendTokenResponse = (user, statusCode, res) => {
   const token = user.getSignedJwtToken();
@@ -20,6 +21,7 @@ const sendTokenResponse = (user, statusCode, res) => {
     _id: user._id,
     fullName: user.fullName,
     email: user.email,
+    profilePic: user.profilePic,
     token,
   });
 };
@@ -32,7 +34,7 @@ const register = async (req, res) => {
     if (existingEmail) {
       return res.status(400).json({
         success: false,
-        message: 'This email is already registered.', 
+        message: 'This email is already registered.',
       });
     }
 
@@ -40,14 +42,45 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'This username is already registered.', 
+        message: 'This username is already registered.',
       });
     }
+
+    let profilePicUrl = '';
+
+    // Handle profile picture upload if provided
+    if (req.file) {
+      try {
+        // Convert buffer to base64
+        const b64 = Buffer.from(req.file.buffer).toString('base64');
+        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'waffle-chat/profile-pictures',
+          resource_type: 'auto',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+            { quality: 'auto' },
+          ],
+        });
+
+        profilePicUrl = result.secure_url;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        return res.status(400).json({
+          success: false,
+          message: 'Failed to upload profile picture. Please try again.',
+        });
+      }
+    }
+
     // Create user
     const user = await User.create({
       fullName,
       email,
       password,
+      profilePic: profilePicUrl,
     });
 
     sendTokenResponse(user, 200, res);

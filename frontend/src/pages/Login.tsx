@@ -35,6 +35,7 @@ export default function Login() {
                     _id: data._id,
                     email: data.email,
                     fullName: data.fullName,
+                    profilePic: data.profilePic,
                     createdAt: new Date().toISOString(),
                 };
                 dispatch(

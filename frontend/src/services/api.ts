@@ -23,8 +23,16 @@ api.interceptors.request.use(
 
 // Auth endpoints
 export const authAPI = {
-    register: (data: { fullName: string; email: string; password: string }) =>
-        api.post('/auth/register', data),
+    register: (data: { fullName: string; email: string; password: string } | FormData) => {
+        if (data instanceof FormData) {
+            return api.post('/auth/register', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+        }
+        return api.post('/auth/register', data);
+    },
     login: (data: { email: string; password: string }) =>
         api.post('/auth/login', data),
     logout: () => api.post('/auth/logout'),
