@@ -34,7 +34,7 @@ const register = async (req, res) => {
     if (existingEmail) {
       return res.status(400).json({
         success: false,
-        message: 'This email is already registered.', 
+        message: 'This email is already registered.',
       });
     }
 
@@ -42,7 +42,7 @@ const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'This username is already registered.', 
+        message: 'This username is already registered.',
       });
     }
 

@@ -123,19 +123,20 @@ async function initSocket(server) {
             text,
             image: imageUrl,
           });
-          
+
           // populate sender before emitting
-          const populatedMessage = await Message.findById(newMessage._id).populate(
-            'senderId',
-            'fullName profilePic',
-          );
+          const populatedMessage = await Message.findById(
+            newMessage._id,
+          ).populate('senderId', 'fullName profilePic');
 
           // update lastMessage on chat
           chat.lastMessage = newMessage._id;
           await chat.save();
 
           io.to(chatId).emit('message:new', populatedMessage);
-          return callback && callback({ status: 'ok', message: populatedMessage });
+          return (
+            callback && callback({ status: 'ok', message: populatedMessage })
+          );
         } catch (err) {
           console.error('message:create error', err.message);
           return callback && callback({ status: 'error' });
@@ -152,22 +153,37 @@ async function initSocket(server) {
             chatId,
             audioType: Object.prototype.toString.call(audioData),
             isBuffer: Buffer.isBuffer(audioData),
-            hasByteLength: audioData && typeof audioData.byteLength === 'number',
-            sampleLength: Array.isArray(audioData) ? audioData.length : undefined,
+            hasByteLength:
+              audioData && typeof audioData.byteLength === 'number',
+            sampleLength: Array.isArray(audioData)
+              ? audioData.length
+              : undefined,
           });
 
           if (!chatId || !audioData) {
-            return callback && callback({ status: 'error', message: 'Invalid payload' });
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Invalid payload' })
+            );
           }
 
           // Know type of audioData from above console.log then convert it!
           let audioBuffer = Buffer.from(new Uint8Array(audioData));
 
           const chat = await Chat.findById(chatId);
-          if (!chat) return callback && callback({ status: 'error', message: 'Chat not found' });
+          if (!chat)
+            return (
+              callback &&
+              callback({ status: 'error', message: 'Chat not found' })
+            );
 
-          const isMember = chat.participants.some((p) => p.user.toString() === userId.toString());
-          if (!isMember) return callback && callback({ status: 'error', message: 'Not a member' });
+          const isMember = chat.participants.some(
+            (p) => p.user.toString() === userId.toString(),
+          );
+          if (!isMember)
+            return (
+              callback && callback({ status: 'error', message: 'Not a member' })
+            );
 
           // Upload to Cloudinary using streamifier
           const streamifier = require('streamifier');
@@ -198,8 +214,19 @@ async function initSocket(server) {
             });
             audioUrl = uploadResponse.secure_url;
           } catch (e) {
-            console.error('[message:audio] Audio upload failed:', e && e.message, e && e.stack);
-            return callback && callback({ status: 'error', message: 'Upload failed', details: e && e.message });
+            console.error(
+              '[message:audio] Audio upload failed:',
+              e && e.message,
+              e && e.stack,
+            );
+            return (
+              callback &&
+              callback({
+                status: 'error',
+                message: 'Upload failed',
+                details: e && e.message,
+              })
+            );
           }
 
           // create and persist the audio message
@@ -209,19 +236,22 @@ async function initSocket(server) {
             audio: audioUrl,
           });
 
-          const populatedMessage = await Message.findById(newMessage._id).populate(
-            'senderId',
-            'fullName profilePic',
-          );
+          const populatedMessage = await Message.findById(
+            newMessage._id,
+          ).populate('senderId', 'fullName profilePic');
 
           chat.lastMessage = newMessage._id;
           await chat.save();
 
           io.to(chatId).emit('message:new', populatedMessage);
-          return callback && callback({ status: 'ok', message: populatedMessage });
+          return (
+            callback && callback({ status: 'ok', message: populatedMessage })
+          );
         } catch (err) {
           console.error('message:audio handler error', err && err.stack);
-          return callback && callback({ status: 'error', message: 'Server error' });
+          return (
+            callback && callback({ status: 'error', message: 'Server error' })
+          );
         }
       });
 
