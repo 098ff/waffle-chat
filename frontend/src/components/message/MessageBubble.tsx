@@ -24,33 +24,35 @@ export default function MessageBubble({
         <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
             <div className="max-w-xs lg:max-w-md">
                 {!isMine && senderName && (
-                    <div className="text-xs font-medium text-gray-600 mb-1">
+                    <div className="mb-1 text-xs font-medium text-gray-600">
                         {senderName}
                     </div>
                 )}
                 <div
-                    className={`px-4 py-2 rounded-lg ${
+                    className={`rounded-lg px-4 py-2 ${
                         isMine
                             ? 'bg-blue-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-800'
+                            : 'border border-gray-200 bg-white text-gray-800'
                     }`}
                 >
-                    {message.text && <p className="break-words">{message.text}</p>}
-                    
+                    {message.text && (
+                        <p className="break-words">{message.text}</p>
+                    )}
+
                     {message.image && (
                         <img
                             src={message.image}
                             alt="attachment"
-                            className="mt-2 rounded max-w-full"
+                            className="mt-2 max-w-full rounded"
                         />
                     )}
 
                     {message.audio && (
                         <AudioPlayer audioUrl={message.audio} isMine={isMine} />
                     )}
-                    
+
                     <div
-                        className={`text-xs mt-1 ${
+                        className={`mt-1 text-xs ${
                             isMine ? 'text-blue-100' : 'text-gray-500'
                         }`}
                     >
