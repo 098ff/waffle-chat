@@ -1,25 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import ChatHeader from '../components/chat/ChatHeader';
+import ChatSidebar from '../components/chat/ChatSidebar';
+import EmptyState from '../components/EmptyState';
+import MessageInput from '../components/message/MessageInput';
+import MessageList from '../components/message/MessageList';
 import { chatAPI, messageAPI } from '../services/api';
 import { socketService } from '../services/socket';
+import type { AppDispatch, RootState } from '../store';
+import { logout } from '../store/authSlice';
 import {
+    addMessage,
     setChats,
     setCurrentChat,
     setMessages,
-    addMessage,
     setOnlineUsers,
     setTyping,
 } from '../store/chatSlice';
-import { logout } from '../store/authSlice';
-import { toast } from 'react-toastify';
-import type { RootState, AppDispatch } from '../store';
 import type { Chat, Message, User } from '../types';
-import ChatSidebar from '../components/chat/ChatSidebar';
-import ChatHeader from '../components/chat/ChatHeader';
-import MessageList from '../components/message/MessageList';
-import MessageInput from '../components/message/MessageInput';
-import EmptyState from '../components/EmptyState';
 
 export default function ChatRoom() {
     const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
@@ -141,7 +141,8 @@ export default function ChatRoom() {
                     if (ack.status === 'ok') {
                         resolve();
                     } else {
-                        const details = ack.message || ack.details || JSON.stringify(ack);
+                        const details =
+                            ack.message || ack.details || JSON.stringify(ack);
                         toast.error('Failed to send audio message: ' + details);
                         reject(new Error('Failed to send audio: ' + details));
                     }
@@ -209,7 +210,7 @@ export default function ChatRoom() {
     };
 
     return (
-        <div className="h-screen flex bg-gray-50">
+        <div className="flex h-screen bg-gray-50">
             <ChatSidebar
                 chats={chats}
                 currentChat={currentChat}
@@ -221,7 +222,7 @@ export default function ChatRoom() {
                 onLogout={handleLogout}
             />
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col">
                 {currentChat ? (
                     <>
                         <ChatHeader
@@ -241,10 +242,37 @@ export default function ChatRoom() {
                             onSendMessage={handleSendMessage}
                             onTyping={handleTyping}
                             onSendAudio={handleSendAudio}
+                            onSendImage={async (base64: string) => {
+                                if (!currentChat) return;
+
+                                return new Promise<void>((resolve, reject) => {
+                                    socketService.sendMessage(
+                                        {
+                                            chatId: currentChat._id,
+                                            text: '',
+                                            image: base64,
+                                        },
+                                        (ack: any) => {
+                                            if (ack.status === 'ok') {
+                                                resolve();
+                                            } else {
+                                                toast.error(
+                                                    'Failed to send image',
+                                                );
+                                                reject(
+                                                    new Error(
+                                                        'Failed to send image',
+                                                    ),
+                                                );
+                                            }
+                                        },
+                                    );
+                                });
+                            }}
                         />
                     </>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-1 items-center justify-center">
                         <EmptyState message="Welcome to Waffle Chat! Select a chat to start messaging" />
                     </div>
                 )}

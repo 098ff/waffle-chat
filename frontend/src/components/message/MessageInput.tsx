@@ -1,8 +1,10 @@
 import { useState, useRef, type FormEvent } from 'react';
 import Button from '../Button';
+import ImageUploadModal from '../ImageUploadModal';
 
 interface MessageInputProps {
     onSendMessage: (text: string) => Promise<void>;
+    onSendImage: (image: string) => Promise<void>;
     onSendAudio: (audioBlob: Blob) => Promise<void>; 
     onTyping: (text: string) => void;
     disabled?: boolean;
@@ -10,6 +12,7 @@ interface MessageInputProps {
 
 export default function MessageInput({
     onSendMessage,
+    onSendImage, 
     onSendAudio, 
     onTyping,
     disabled = false,
@@ -17,28 +20,24 @@ export default function MessageInput({
     const [messageText, setMessageText] = useState('');
     const [sending, setSending] = useState(false);
     const [isRecording, setIsRecording] = useState(false); 
+    const [showModal, setShowModal] = useState(false);
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
     const handleStartRecording = async () => {
         if (sending || disabled) return;
-        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             setIsRecording(true); 
-            
             mediaRecorderRef.current = new MediaRecorder(stream);
             audioChunksRef.current = []; 
-
             mediaRecorderRef.current.ondataavailable = (event) => {
                 audioChunksRef.current.push(event.data);
             };
-
             mediaRecorderRef.current.onstop = async () => {
                 setSending(true);
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                
                 try {
                     await onSendAudio(audioBlob); 
                 } catch (error) {
@@ -46,12 +45,10 @@ export default function MessageInput({
                 } finally {
                     setSending(false);
                     setIsRecording(false);
-                    stream.getTracks().forEach(track => track.stop()); // ปิดการเข้าถึงไมโครโฟน
+                    stream.getTracks().forEach(track => track.stop());
                 }
             };
-
             mediaRecorderRef.current.start();
-
         } catch (err) {
             console.error("Error accessing microphone:", err);
             alert("ไม่สามารถเข้าถึงไมโครโฟนได้");
@@ -68,7 +65,6 @@ export default function MessageInput({
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!messageText.trim() || sending || isRecording) return;
-
         setSending(true);
         try {
             await onSendMessage(messageText.trim());
@@ -87,10 +83,62 @@ export default function MessageInput({
 
     const showSendButton = messageText.trim().length > 0;
 
+    // const handleImageSend = async (file: File) => {
+    //     const reader = new FileReader();
+    //     reader.onloadend = async () => {
+    //         const base64 = reader.result as string;
+    //         setSending(true);
+    //         try {
+    //             await onSendImage(base64);
+    //         } catch (error) {
+    //             console.error('Image send failed', error);
+    //         } finally {
+    //             setSending(false);
+    //         }
+    //     };
+    //     reader.readAsDataURL(file);
+    // };
+
+    const handleImageSend = async (file: File) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const img = new Image();
+            img.onload = async () => {
+                const maxWidth = 800;
+                const maxHeight = 600;
+                let { width, height } = img;
+                
+                const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+                width = width * scale;
+                height = height * scale;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const base64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                setSending(true);
+                try {
+                    await onSendImage(base64);
+                } catch (error) {
+                    console.error('Image send failed', error);
+                } finally {
+                    setSending(false);
+                }
+            };
+            img.src = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
         <div className="bg-white border-t border-gray-200 p-4">
             <form onSubmit={handleSubmit} className="flex gap-2">
-
                 {isRecording ? (
                     <div className="flex-1 px-4 py-2 flex items-center justify-center text-red-600 bg-gray-100 rounded-lg">
                         Recording audio...
@@ -124,7 +172,21 @@ export default function MessageInput({
                         {isRecording ? "Stop" : "Mic"}
                     </Button>
                 )}
+
+                <Button
+                    type="button"
+                    onClick={() => setShowModal(true)}
+                    disabled={sending || isRecording}
+                >
+                    Upload
+                </Button>
             </form>
+
+            <ImageUploadModal
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSend={handleImageSend}
+            />
         </div>
     );
 }

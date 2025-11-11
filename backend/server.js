@@ -10,6 +10,7 @@ const path = require('path');
 const auth = require('./routes/auth');
 const message = require('./routes/message.js');
 const chat = require('./routes/chat');
+const upload = require('./routes/upload');
 const { createServer } = require('http');
 dotenv.config({ path: './config/config.env' });
 const app = express();
@@ -33,6 +34,7 @@ app.use(cors());
 app.use('/api/auth', auth);
 app.use('/api/messages', message);
 app.use('/api/chats', chat);
+app.use('/api/upload', upload);
 
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
