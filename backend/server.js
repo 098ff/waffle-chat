@@ -1,11 +1,15 @@
 const express = require('express');
-const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const { initSocket } = require('./config/socket');
 const path = require('path');
-dotenv.config({ path: './config/config.env' });
+
+// Load env vars only in development
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = require('dotenv');
+  dotenv.config({ path: './config/config.env' });
+}
 
 // Route files
 const auth = require('./routes/auth');
