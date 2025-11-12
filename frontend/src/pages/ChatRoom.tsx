@@ -90,9 +90,7 @@ export default function ChatRoom() {
             if (data.joinedChats.length > 0 && !currentChat) {
                 dispatch(setCurrentChat(data.joinedChats[0]));
             }
-            console.log(data.notJoinedChats);
             dispatch(setNotJoinedChats(data.notJoinedChats));
-            console.log(notJoinedChats)
             // if (data.NotJoinedChats.length > 0 && !currentChat) {
             //     dispatch(setCurrentChat(data.notJoinedChats[0]));
             // }
@@ -247,7 +245,7 @@ export default function ChatRoom() {
                         />
 
                         {notJoinedChats.some((c) => c._id === currentChat._id) ? (
-                            <ChatLock />
+                            <ChatLock chatId={currentChat._id} />
                         ) : (
                             <>
                                 <MessageList

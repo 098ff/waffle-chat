@@ -55,6 +55,8 @@ export const chatAPI = {
     sendMessage: (chatId: string, data: { text?: string; image?: string }) =>
         api.post(`/chats/${chatId}/messages`, data),
 
+    joinChat: (chatId: string) => api.put(`/chats/${chatId}`),
+
     // Invitation endpoints
     getInvitations: () => api.get('/chats/invitations'),
     acceptInvitation: (id: string) => api.put(`/chats/invitations/${id}/accept`),
