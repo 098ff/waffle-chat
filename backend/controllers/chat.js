@@ -268,10 +268,51 @@ const getChatMembers = async (req, res) => {
   }
 };
 
+const joinChat = async (req, res) => {
+  try {
+    const { id: chatId } = req.params;
+    const userId = req.user._id;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
+    }
+
+    if (chat.type !== 'group') {
+      return res
+        .status(400)
+        .json({ message: 'Only group chats can be joined.' });
+    }
+
+    const isMember = chat.participants.some(
+      (p) => p.user.toString() === userId.toString(),
+    );
+    if (isMember) {
+      // Idempotent: already a member, return current chat
+      return res.status(200).json(chat);
+    }
+
+    // Add user as member with full name
+    const user = await User.findById(userId).select('fullName');
+    chat.participants.push({
+      user: user,
+      role: 'member',
+    });
+
+    await chat.save();
+
+    return res.status(200).json(chat);
+  } catch (err) {
+    console.error('joinChat', err.message);
+    return res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
+  }
+};
+
 module.exports = {
   createChat,
   getChatsForUser,
   getMessagesByChatId,
   postMessageToChat,
   getChatMembers,
+  joinChat,
 };

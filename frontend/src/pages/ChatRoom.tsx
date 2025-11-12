@@ -21,6 +21,7 @@ import {
     setNotJoinedChats,
 } from '../store/chatSlice';
 import type { Chat, Message, User } from '../types';
+import ChatLock from '../components/chat/ChatLock';
 
 export default function ChatRoom() {
     const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
@@ -246,8 +247,7 @@ export default function ChatRoom() {
                         />
 
                         {notJoinedChats.some((c) => c._id === currentChat._id) ? (
-                            // Not joined: show only background below the header
-                            <div className="flex flex-1" />
+                            <ChatLock />
                         ) : (
                             <>
                                 <MessageList
