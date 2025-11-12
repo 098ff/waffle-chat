@@ -18,8 +18,10 @@ import {
     setMessages,
     setOnlineUsers,
     setTyping,
+    setNotJoinedChats,
 } from '../store/chatSlice';
 import type { Chat, Message, User } from '../types';
+import ChatLock from '../components/chat/ChatLock';
 
 export default function ChatRoom() {
     const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
@@ -28,7 +30,7 @@ export default function ChatRoom() {
     const dispatch = useDispatch<AppDispatch>();
 
     const { user, token } = useSelector((state: RootState) => state.auth);
-    const { chats, currentChat, messages, typingUsers, onlineUsers } =
+    const { chats, notJoinedChats, currentChat, messages, typingUsers, onlineUsers } =
         useSelector((state: RootState) => state.chat);
 
     useEffect(() => {
@@ -47,11 +49,16 @@ export default function ChatRoom() {
     }, [token]);
 
     useEffect(() => {
+        const isNotJoined = !!currentChat && notJoinedChats.some((c) => c._id === currentChat._id);
+
+        if (isNotJoined) {
+            return;
+        }
         if (currentChat) {
             loadMessages(currentChat._id);
             socketService.joinRoom(currentChat._id);
         }
-    }, [currentChat]);
+    }, [currentChat, notJoinedChats]);
 
     const initializeSocket = () => {
         if (!token) return;
@@ -79,10 +86,14 @@ export default function ChatRoom() {
     const loadChats = async () => {
         try {
             const { data } = await chatAPI.getChats();
-            dispatch(setChats(data));
-            if (data.length > 0 && !currentChat) {
-                dispatch(setCurrentChat(data[0]));
+            dispatch(setChats(data.joinedChats));
+            if (data.joinedChats.length > 0 && !currentChat) {
+                dispatch(setCurrentChat(data.joinedChats[0]));
             }
+            dispatch(setNotJoinedChats(data.notJoinedChats));
+            // if (data.NotJoinedChats.length > 0 && !currentChat) {
+            //     dispatch(setCurrentChat(data.notJoinedChats[0]));
+            // }
         } catch (error) {
             toast.error('Failed to load chats');
         }
@@ -212,7 +223,8 @@ export default function ChatRoom() {
     return (
         <div className="flex h-screen bg-gray-50">
             <ChatSidebar
-                chats={chats}
+                joinedChats={chats}
+                notJoinedChats={notJoinedChats}
                 currentChat={currentChat}
                 user={user}
                 onlineUserIds={onlineUsers}
@@ -232,44 +244,44 @@ export default function ChatRoom() {
                             onlineUserIds={onlineUsers}
                         />
 
-                        <MessageList
-                            messages={messages}
-                            currentUser={user}
-                            typingUsers={getTypingUsers()}
-                        />
+                        {notJoinedChats.some((c) => c._id === currentChat._id) ? (
+                            <ChatLock chatId={currentChat._id} />
+                        ) : (
+                            <>
+                                <MessageList
+                                    messages={messages}
+                                    currentUser={user}
+                                    typingUsers={getTypingUsers()}
+                                />
 
-                        <MessageInput
-                            onSendMessage={handleSendMessage}
-                            onTyping={handleTyping}
-                            onSendAudio={handleSendAudio}
-                            onSendImage={async (base64: string) => {
-                                if (!currentChat) return;
+                                <MessageInput
+                                    onSendMessage={handleSendMessage}
+                                    onTyping={handleTyping}
+                                    onSendAudio={handleSendAudio}
+                                    onSendImage={async (base64: string) => {
+                                        if (!currentChat) return;
 
-                                return new Promise<void>((resolve, reject) => {
-                                    socketService.sendMessage(
-                                        {
-                                            chatId: currentChat._id,
-                                            text: '',
-                                            image: base64,
-                                        },
-                                        (ack: any) => {
-                                            if (ack.status === 'ok') {
-                                                resolve();
-                                            } else {
-                                                toast.error(
-                                                    'Failed to send image',
-                                                );
-                                                reject(
-                                                    new Error(
-                                                        'Failed to send image',
-                                                    ),
-                                                );
-                                            }
-                                        },
-                                    );
-                                });
-                            }}
-                        />
+                                        return new Promise<void>((resolve, reject) => {
+                                            socketService.sendMessage(
+                                                {
+                                                    chatId: currentChat._id,
+                                                    text: '',
+                                                    image: base64,
+                                                },
+                                                (ack: any) => {
+                                                    if (ack.status === 'ok') {
+                                                        resolve();
+                                                    } else {
+                                                        toast.error('Failed to send image');
+                                                        reject(new Error('Failed to send image'));
+                                                    }
+                                                },
+                                            );
+                                        });
+                                    }}
+                                />
+                            </>
+                        )}
                     </>
                 ) : (
                     <div className="flex flex-1 items-center justify-center">

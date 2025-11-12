@@ -7,7 +7,8 @@ import OnlineUsersModal from './OnlineUsersModal';
 import InvitationsModal from '../InvitationsModal';
 
 interface ChatSidebarProps {
-    chats: Chat[];
+    joinedChats: Chat[];
+    notJoinedChats: Chat[];
     currentChat: Chat | null;
     user: User | null;
     onlineUserIds: string[];
@@ -18,7 +19,8 @@ interface ChatSidebarProps {
 }
 
 export default function ChatSidebar({
-    chats,
+    joinedChats,
+    notJoinedChats,
     currentChat,
     user,
     onlineUserIds,
@@ -90,8 +92,10 @@ export default function ChatSidebar({
                 onClose={() => setShowInvitations(false)}
             />
 
+            
             <div className="flex-1 overflow-y-auto">
-                {chats.length === 0 ? (
+                <div className='text-xl font-bold text-gray-800 text-center py-2 bg-gray-100'>Joined Chat</div>
+                {joinedChats.length === 0 ? (
                     <EmptyState
                         message="No chats yet"
                         action={{
@@ -100,7 +104,7 @@ export default function ChatSidebar({
                         }}
                     />
                 ) : (
-                    chats.map((chat) => (
+                    joinedChats.map((chat) => (
                         <ChatListItem
                             key={chat._id}
                             chat={chat}
@@ -111,6 +115,29 @@ export default function ChatSidebar({
                         />
                     ))
                 )}
+
+                <div className='text-xl font-bold text-gray-800 text-center py-2 bg-gray-100'>Not Joined</div>
+                {notJoinedChats.length === 0 ? (
+                    <EmptyState
+                        message="No More Chat to Join!"
+                        action={{
+                            label: '',
+                            onClick: () => {},
+                        }}
+                    />
+                ) : (
+                    notJoinedChats.map((chat) => (
+                        <ChatListItem
+                            key={chat._id}
+                            chat={chat}
+                            currentUser={user}
+                            isActive={currentChat?._id === chat._id}
+                            online={isOnline(chat)}
+                            onClick={() => onChatSelect(chat)}
+                        />
+                    ))
+                )}
+
             </div>
         </div>
     );
