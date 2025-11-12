@@ -48,6 +48,10 @@ export default function ChatRoom() {
     }, [token]);
 
     useEffect(() => {
+        if (notJoinedChats.includes(currentChat ?? chats[0])) {
+            // setBlock(true);
+            return;
+        }
         if (currentChat) {
             loadMessages(currentChat._id);
             socketService.joinRoom(currentChat._id);

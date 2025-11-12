@@ -236,13 +236,14 @@ const getChatMembers = async (req, res) => {
       return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
     }
 
-    // ensure user is participant
-    const isMember = chat.participants.some(
-      (p) => p.user.toString() === userId.toString(),
-    );
-    if (!isMember) {
-      return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
-    }
+    // As one user can see members of the groups even if user has not joined, so it results in removing this check.
+    // // ensure user is participant
+    // const isMember = chat.participants.some(
+    //   (p) => p.user.toString() === userId.toString(),
+    // );
+    // if (!isMember) {
+    //   return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
+    // }
 
     const participantIds = chat.participants.map((p) => p.user);
 
