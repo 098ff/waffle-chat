@@ -125,7 +125,14 @@ const getChatsForUser = async (req, res) => {
     const chats = await Chat.find({ 'participants.user': userId }).sort({
       updatedAt: -1,
     });
-    res.status(200).json(chats);
+    const notJoinedChats = await Chat.find({
+      type: "group",
+      'participants.user': { $ne: userId }
+    }).sort({ name: 1 });
+    res.status(200).json({
+      joinedChats: chats,
+      notJoinedChats: notJoinedChats,
+    });
   } catch (err) {
     console.error('getChatsForUser', err.message);
     res.status(500).json({ message: ErrorMessages.SERVER_ERROR });

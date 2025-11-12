@@ -18,6 +18,7 @@ import {
     setMessages,
     setOnlineUsers,
     setTyping,
+    setNotJoinedChats,
 } from '../store/chatSlice';
 import type { Chat, Message, User } from '../types';
 
@@ -28,7 +29,7 @@ export default function ChatRoom() {
     const dispatch = useDispatch<AppDispatch>();
 
     const { user, token } = useSelector((state: RootState) => state.auth);
-    const { chats, currentChat, messages, typingUsers, onlineUsers } =
+    const { chats, notJoinedChats, currentChat, messages, typingUsers, onlineUsers } =
         useSelector((state: RootState) => state.chat);
 
     useEffect(() => {
@@ -79,10 +80,16 @@ export default function ChatRoom() {
     const loadChats = async () => {
         try {
             const { data } = await chatAPI.getChats();
-            dispatch(setChats(data));
-            if (data.length > 0 && !currentChat) {
-                dispatch(setCurrentChat(data[0]));
+            dispatch(setChats(data.joinedChats));
+            if (data.joinedChats.length > 0 && !currentChat) {
+                dispatch(setCurrentChat(data.joinedChats[0]));
             }
+            console.log(data.notJoinedChats);
+            dispatch(setNotJoinedChats(data.notJoinedChats));
+            console.log(notJoinedChats)
+            // if (data.NotJoinedChats.length > 0 && !currentChat) {
+            //     dispatch(setCurrentChat(data.notJoinedChats[0]));
+            // }
         } catch (error) {
             toast.error('Failed to load chats');
         }
@@ -212,7 +219,8 @@ export default function ChatRoom() {
     return (
         <div className="flex h-screen bg-gray-50">
             <ChatSidebar
-                chats={chats}
+                joinedChats={chats}
+                notJoinedChats={notJoinedChats}
                 currentChat={currentChat}
                 user={user}
                 onlineUserIds={onlineUsers}

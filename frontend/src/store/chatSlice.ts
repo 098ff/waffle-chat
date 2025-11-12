@@ -5,6 +5,7 @@ import { logout } from './authSlice';
 
 interface ChatState {
     chats: Chat[];
+    notJoinedChats: Chat[];
     currentChat: Chat | null;
     messages: Message[];
     onlineUsers: string[];
@@ -14,6 +15,7 @@ interface ChatState {
 
 const initialState: ChatState = {
     chats: [],
+    notJoinedChats: [],
     currentChat: null,
     messages: [],
     onlineUsers: [],
@@ -27,6 +29,9 @@ const chatSlice = createSlice({
     reducers: {
         setChats: (state, action: PayloadAction<Chat[]>) => {
             state.chats = action.payload;
+        },
+        setNotJoinedChats: (state, action: PayloadAction<Chat[]>) => {
+            state.notJoinedChats = action.payload;
         },
         addChat: (state, action: PayloadAction<Chat>) => {
             const exists = state.chats.find(
@@ -88,5 +93,6 @@ export const {
     setOnlineUsers,
     setTyping,
     setLoading,
+    setNotJoinedChats,
 } = chatSlice.actions;
 export default chatSlice.reducer;
