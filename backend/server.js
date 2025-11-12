@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const { initSocket } = require('./config/socket');
 const path = require('path');
+dotenv.config({ path: './config/config.env' });
 
 // Route files
 const auth = require('./routes/auth');
@@ -12,7 +13,6 @@ const message = require('./routes/message.js');
 const chat = require('./routes/chat');
 const upload = require('./routes/upload');
 const { createServer } = require('http');
-dotenv.config({ path: './config/config.env' });
 const app = express();
 const server = createServer(app);
 const { join } = require('node:path');

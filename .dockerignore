@@ -1,0 +1,19 @@
+# Ignore all node_modules folders
+**/node_modules
+
+# Ignore local environment files
+.env
+.env.local
+
+# Ignore build output directories
+**/dist
+**/build
+
+# Ignore Docker files
+docker-compose.yml
+*.Dockerfile
+.dockerignore
+
+# Ignore Git
+.git
+.gitignore

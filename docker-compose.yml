@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+    # 1 The Node.js Backend Service
+    backend:
+        build:
+            context: .
+            dockerfile: backend.Dockerfile
+        container_name: waffle-chat-backend
+        volumes:
+            - ./backend:/usr/src/app
+    nginx:
+        build:
+            context: .
+            dockerfile: nginx.Dockerfile
+        image: waffle-chat-nginx
+        restart: always
+        ports:
+            - "80:80"
+        depends_on:
+            - backend
