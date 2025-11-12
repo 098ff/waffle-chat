@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
     # 1 The Node.js Backend Service
     backend:
@@ -18,6 +16,7 @@ services:
         #     - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
         #     - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
         #     - VITE_API_URL=/api
+        #     - VITE_SOCKET_URL=/
         container_name: waffle-chat-backend
         volumes:
             - ./backend:/usr/src/app

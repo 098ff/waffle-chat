@@ -6,7 +6,7 @@ const { initSocket } = require('./config/socket');
 const path = require('path');
 
 // Load env vars only in development
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
   const dotenv = require('dotenv');
   dotenv.config({ path: './config/config.env' });
 }
