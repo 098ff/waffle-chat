@@ -126,9 +126,12 @@ const getChatsForUser = async (req, res) => {
       updatedAt: -1,
     });
     const notJoinedChats = await Chat.find({
-      type: "group",
-      'participants.user': { $ne: userId }
-    }).sort({ name: 1 });
+      type: 'group',
+      participants: { $not: { $elemMatch: { user: userId } } }
+    })
+  .collation({ locale: 'en', strength: 2 }) // sort by English alphabet, not ASCII
+  .sort({ name: 1 });
+
     res.status(200).json({
       joinedChats: chats,
       notJoinedChats: notJoinedChats,
