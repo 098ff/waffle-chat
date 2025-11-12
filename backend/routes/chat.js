@@ -5,6 +5,7 @@ const {
   getMessagesByChatId,
   postMessageToChat,
   getChatMembers,
+  joinChat,
 } = require('../controllers/chat');
 const {
   getInvitationsForUser,
@@ -25,6 +26,7 @@ router.put('/invitations/:id/reject', rejectInvitation);
 // Chat routes
 router.post('/', createChat);
 router.get('/', getChatsForUser);
+router.put('/:id', joinChat);
 router.get('/:id', getChatMembers);
 router.get('/:id/messages', getMessagesByChatId);
 router.post('/:id/messages', postMessageToChat);

@@ -125,7 +125,17 @@ const getChatsForUser = async (req, res) => {
     const chats = await Chat.find({ 'participants.user': userId }).sort({
       updatedAt: -1,
     });
-    res.status(200).json(chats);
+    const notJoinedChats = await Chat.find({
+      type: 'group',
+      participants: { $not: { $elemMatch: { user: userId } } }
+    })
+  .collation({ locale: 'en', strength: 2 }) // sort by English alphabet, not ASCII
+  .sort({ name: 1 });
+
+    res.status(200).json({
+      joinedChats: chats,
+      notJoinedChats: notJoinedChats,
+    });
   } catch (err) {
     console.error('getChatsForUser', err.message);
     res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
@@ -229,13 +239,14 @@ const getChatMembers = async (req, res) => {
       return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
     }
 
-    // ensure user is participant
-    const isMember = chat.participants.some(
-      (p) => p.user.toString() === userId.toString(),
-    );
-    if (!isMember) {
-      return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
-    }
+    // As one user can see members of the groups even if user has not joined, so it results in removing this check.
+    // // ensure user is participant
+    // const isMember = chat.participants.some(
+    //   (p) => p.user.toString() === userId.toString(),
+    // );
+    // if (!isMember) {
+    //   return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
+    // }
 
     const participantIds = chat.participants.map((p) => p.user);
 
@@ -257,10 +268,51 @@ const getChatMembers = async (req, res) => {
   }
 };
 
+const joinChat = async (req, res) => {
+  try {
+    const { id: chatId } = req.params;
+    const userId = req.user._id;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json({ message: ErrorMessages.CHAT_NOT_FOUND });
+    }
+
+    if (chat.type !== 'group') {
+      return res
+        .status(400)
+        .json({ message: 'Only group chats can be joined.' });
+    }
+
+    const isMember = chat.participants.some(
+      (p) => p.user.toString() === userId.toString(),
+    );
+    if (isMember) {
+      // Idempotent: already a member, return current chat
+      return res.status(200).json(chat);
+    }
+
+    // Add user as member with full name
+    const user = await User.findById(userId).select('fullName');
+    chat.participants.push({
+      user: user,
+      role: 'member',
+    });
+
+    await chat.save();
+
+    return res.status(200).json(chat);
+  } catch (err) {
+    console.error('joinChat', err.message);
+    return res.status(500).json({ message: ErrorMessages.SERVER_ERROR });
+  }
+};
+
 module.exports = {
   createChat,
   getChatsForUser,
   getMessagesByChatId,
   postMessageToChat,
   getChatMembers,
+  joinChat,
 };
