@@ -26,21 +26,33 @@ const acceptInvitation = async (req, res) => {
     const userId = req.user._id;
     const { id } = req.params;
 
+    // Find invitation
     const invitation = await Invitation.findById(id);
     if (!invitation || invitation.invitee.toString() !== userId.toString()) {
       return res.status(404).json({ message: 'Invitation not found' });
     }
 
+    // Check invitation status
     if (invitation.status !== 'pending') {
       return res.status(400).json({ message: 'Invitation already handled' });
     }
 
+    // Mark invitation as accepted
     invitation.status = 'accepted';
     await invitation.save();
 
+    // Find the chat
     const chat = await Chat.findById(invitation.chat);
-    chat.participants.push({ user: userId, role: 'member' });
-    await chat.save();
+    
+    // Check if user is already in chat
+    const isMember = chat.participants.some(
+      (p) => p.user.toString() === userId.toString()
+    );
+
+    if (!isMember) {
+      chat.participants.push({ user: userId, role: 'member' });
+      await chat.save();
+    }
 
     res.status(200).json({ message: 'Invitation accepted' });
   } catch (err) {
