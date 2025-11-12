@@ -48,15 +48,16 @@ export default function ChatRoom() {
     }, [token]);
 
     useEffect(() => {
-        if (notJoinedChats.includes(currentChat ?? chats[0])) {
-            // setBlock(true);
+        const isNotJoined = !!currentChat && notJoinedChats.some((c) => c._id === currentChat._id);
+
+        if (isNotJoined) {
             return;
         }
         if (currentChat) {
             loadMessages(currentChat._id);
             socketService.joinRoom(currentChat._id);
         }
-    }, [currentChat]);
+    }, [currentChat, notJoinedChats]);
 
     const initializeSocket = () => {
         if (!token) return;
@@ -244,44 +245,45 @@ export default function ChatRoom() {
                             onlineUserIds={onlineUsers}
                         />
 
-                        <MessageList
-                            messages={messages}
-                            currentUser={user}
-                            typingUsers={getTypingUsers()}
-                        />
+                        {notJoinedChats.some((c) => c._id === currentChat._id) ? (
+                            // Not joined: show only background below the header
+                            <div className="flex flex-1" />
+                        ) : (
+                            <>
+                                <MessageList
+                                    messages={messages}
+                                    currentUser={user}
+                                    typingUsers={getTypingUsers()}
+                                />
 
-                        <MessageInput
-                            onSendMessage={handleSendMessage}
-                            onTyping={handleTyping}
-                            onSendAudio={handleSendAudio}
-                            onSendImage={async (base64: string) => {
-                                if (!currentChat) return;
+                                <MessageInput
+                                    onSendMessage={handleSendMessage}
+                                    onTyping={handleTyping}
+                                    onSendAudio={handleSendAudio}
+                                    onSendImage={async (base64: string) => {
+                                        if (!currentChat) return;
 
-                                return new Promise<void>((resolve, reject) => {
-                                    socketService.sendMessage(
-                                        {
-                                            chatId: currentChat._id,
-                                            text: '',
-                                            image: base64,
-                                        },
-                                        (ack: any) => {
-                                            if (ack.status === 'ok') {
-                                                resolve();
-                                            } else {
-                                                toast.error(
-                                                    'Failed to send image',
-                                                );
-                                                reject(
-                                                    new Error(
-                                                        'Failed to send image',
-                                                    ),
-                                                );
-                                            }
-                                        },
-                                    );
-                                });
-                            }}
-                        />
+                                        return new Promise<void>((resolve, reject) => {
+                                            socketService.sendMessage(
+                                                {
+                                                    chatId: currentChat._id,
+                                                    text: '',
+                                                    image: base64,
+                                                },
+                                                (ack: any) => {
+                                                    if (ack.status === 'ok') {
+                                                        resolve();
+                                                    } else {
+                                                        toast.error('Failed to send image');
+                                                        reject(new Error('Failed to send image'));
+                                                    }
+                                                },
+                                            );
+                                        });
+                                    }}
+                                />
+                            </>
+                        )}
                     </>
                 ) : (
                     <div className="flex flex-1 items-center justify-center">
