@@ -6,6 +6,18 @@ services:
         build:
             context: .
             dockerfile: backend.Dockerfile
+        # environment:
+        #     - PORT=5000
+        #     - MONGO_URI=${MONGO_URI}
+        #     - NODE_ENV=production
+        #     - JWT_SECRET=${JWT_SECRET}
+        #     - JWT_EXPIRE=30d
+        #     - JWT_COOKIE_EXPIRE=30
+        #     - CLIENT_URL=http://localhost:5173
+        #     - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+        #     - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+        #     - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+        #     - VITE_API_URL=/api
         container_name: waffle-chat-backend
         volumes:
             - ./backend:/usr/src/app

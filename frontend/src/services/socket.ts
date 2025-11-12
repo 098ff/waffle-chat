@@ -16,7 +16,7 @@ class SocketService {
         });
 
         this.socket.on('connect', () => {
-            console.log('Socket connected:', this.socket?.id);
+            console.log('Socket connected');
         });
 
         this.socket.on('connect_error', (err) => {

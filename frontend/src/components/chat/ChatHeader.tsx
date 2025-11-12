@@ -29,7 +29,6 @@ export default function ChatHeader({ chat, chatName, online, onlineUserIds }: Ch
 
             try {
                 const { data } = await chatAPI.getChatMembers(chat._id);
-                console.log(data)
                 setMembers(data);
             } catch (err) {
                 console.error('Failed to fetch members');

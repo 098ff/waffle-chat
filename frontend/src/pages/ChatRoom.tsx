@@ -9,7 +9,7 @@ import MessageInput from '../components/message/MessageInput';
 import MessageList from '../components/message/MessageList';
 import { chatAPI, messageAPI } from '../services/api';
 import { socketService } from '../services/socket';
-import type { AppDispatch, RootState } from '../store';
+import type {AppDispatch, RootState} from '../store';
 import { logout } from '../store/authSlice';
 import {
     addMessage,
@@ -137,7 +137,6 @@ export default function ChatRoom() {
                     audioData: audioBlob,
                 },
                 (ack: any) => {
-                    console.log('sendAudio ack', ack);
                     if (ack.status === 'ok') {
                         resolve();
                     } else {
