@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent, ChangeEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -20,6 +20,7 @@ export default function Register() {
     const [profilePic, setProfilePic] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
@@ -48,11 +49,19 @@ export default function Register() {
             };
             reader.readAsDataURL(file);
         }
+        // Reset input value so selecting the same file again still triggers onChange
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const removeImage = () => {
         setProfilePic(null);
         setPreviewUrl('');
+        // Also clear the file input value to allow picking the same file again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleSubmit = async (e: FormEvent) => {
@@ -152,6 +161,7 @@ export default function Register() {
                             type="file"
                             accept="image/*"
                             onChange={handleImageChange}
+                            ref={fileInputRef}
                             className="hidden"
                         />
                     </label>
