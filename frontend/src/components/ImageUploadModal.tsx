@@ -24,6 +24,11 @@ export default function ImageUploadModal({ isOpen, onClose, onSend }: Props) {
             const f = e.target.files[0];
             setFile(f);
             setPreview(URL.createObjectURL(f));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result as string);
+            };
+            reader.readAsDataURL(f);
         }
     };
 
