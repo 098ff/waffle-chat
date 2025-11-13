@@ -251,11 +251,13 @@ const getChatMembers = async (req, res) => {
     const participantIds = chat.participants.map((p) => p.user);
 
     // Fetch user details for each participant
-    const members = await User.find({ _id: { $in: participantIds } }).select('fullName');
+    const members = await User.find({ _id: { $in: participantIds } }).select('fullName email profilePic');
 
     const formattedMembers = members.map((user) => ({
       id: user._id,
       fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
     }));
 
     // Sort alphabetically by fullName

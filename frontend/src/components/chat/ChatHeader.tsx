@@ -14,6 +14,8 @@ interface Member {
     id: string;
     fullName: string;
     online: boolean;
+    profilePic: string;
+    email: string;
 }
 
 export default function ChatHeader({ chat, chatName, online, onlineUserIds }: ChatHeaderProps) {
@@ -47,6 +49,7 @@ export default function ChatHeader({ chat, chatName, online, onlineUserIds }: Ch
         }
     };
 
+    console.log("MEMBERS",members);
 
     return (
         <>
@@ -93,10 +96,21 @@ export default function ChatHeader({ chat, chatName, online, onlineUserIds }: Ch
                 ) : (
                     <div className="space-y-3 max-h-80 overflow-y-auto">
                         {members.map((member) => (
+
                             <div key={member.id} className="flex items-center space-x-3">
-                                <UserAvatar name={member.fullName} size="sm" online={onlineUserIds.includes(member.id)} />
-                                <div>
-                                    <div className="font-medium">{member.fullName}</div>
+                                <UserAvatar 
+                                    name={member.fullName}
+                                    profilePic={member.profilePic}
+                                    size="md"
+                                    online={onlineUserIds.includes(member.id)}
+                                />
+                                <div className="ml-3">
+                                    <div className="font-medium text-gray-800">
+                                        {member.fullName}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        {member.email}
+                                    </div>
                                 </div>
                             </div>
                         ))}
