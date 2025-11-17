@@ -234,7 +234,7 @@ eb deploy
 
 #### Common Deployment Issues & Solutions
 
-##### Issue 1: CSP Blocking Resources
+### Issue 1: CSP Blocking Resources
 **Symptoms**: Image previews not showing, inline styles blocked, WebSocket connections failing
 
 **Solution**: Update `nginx.conf` to include proper CSP directives:
@@ -249,7 +249,7 @@ set $CSP_media "media-src 'self' blob: data: https://res.cloudinary.com";
 set $CSP "default-src 'self'; ${CSP_script}; ${CSP_style}; ${CSP_image}; ${CSP_media}; ${CSP_connect}; ${CSP_font}; ${CSP_frame}; ${CSP_object}; ${CSP_base}";
 ```
 
-##### Issue 2: Socket.IO Connection Fails with Load Balancer
+### Issue 2: Socket.IO Connection Fails with Load Balancer
 **Symptoms**: 500 errors, WebSocket upgrade fails, real-time features not working
 
 **Root Cause**: Without sticky sessions, each request hits a different instance. Socket.IO's multi-step handshake breaks because:
@@ -260,7 +260,7 @@ set $CSP "default-src 'self'; ${CSP_script}; ${CSP_style}; ${CSP_image}; ${CSP_m
 
 **Why it works**: Sticky sessions use cookies (AWSALB) to route all requests from same user to same instance, maintaining Socket.IO connection state.
 
-##### Issue 3: Deployment Timeout
+### Issue 3: Deployment Timeout
 **Symptoms**: `Command execution completed on all instances. Summary: [Successful: 0, TimedOut: 1]`
 
 **Solutions**:
@@ -269,7 +269,7 @@ set $CSP "default-src 'self'; ${CSP_script}; ${CSP_style}; ${CSP_image}; ${CSP_m
 3. Restart environment: `eb restart`
 4. If persistent, create new environment with clean state
 
-##### Issue 4: Corrupted Dockerfile in Deployment
+### Issue 4: Corrupted Dockerfile in Deployment
 **Symptoms**: `ERROR: failed to solve: dockerfile parse error: unknown instruction: pax_global_header`
 
 **Cause**: Archive created with tar before zip (double-archiving)
@@ -281,7 +281,7 @@ zip -r deploy.zip . -x "*.git*" "*node_modules/*" "*.env"
 
 Never do: `tar -czf project.tar.gz . && zip deploy.zip project.tar.gz`
 
-##### Issue 5: SSM Agent Not Online / Can't SSH
+### Issue 5: SSM Agent Not Online / Can't SSH
 **Symptoms**: Session Manager shows "SSM Agent is not online"
 
 **Solutions**:
@@ -291,7 +291,7 @@ Never do: `tar -czf project.tar.gz . && zip deploy.zip project.tar.gz`
    - Apply (will recreate instance)
 3. For logs without SSH: `eb logs --all`
 
-##### Issue 6: Missing Environment Variable Warnings
+### Issue 6: Missing Environment Variable Warnings
 **Symptoms**: `The "CLIENT_URL" variable is not set. Defaulting to a blank string`
 
 **Solution**: Set via EB CLI or Console:
@@ -299,12 +299,19 @@ Never do: `tar -czf project.tar.gz . && zip deploy.zip project.tar.gz`
 eb setenv CLIENT_URL=https://your-domain.com
 ```
 
-##### Issue 7: Microphone Access Denied
+### Issue 7: Microphone Access Denied
 **Symptoms**: Browser blocks microphone access with "Not allowed" error
 
 **Cause**: Modern browsers require HTTPS for microphone/camera access
 
 **Solution**: Configure HTTPS with AWS Certificate Manager (see step 6 above)
+
+### Issue 8: Elastic Beanstalk Environment Re-Deploys failed
+**Symptoms**: Environment goes to "Red" status after upload new deploy and re-deployment
+
+**Cause**: Insufficient role permission for Elastic Beanstalk to pull public Docker images from Docker Hub
+
+**Solution**: Add roles permission in IAM for AWS Service: elasticbeanstalk (AmazonEC2ContainerRegistryPullOnly) to pull public Docker images
 
 #### Architecture Notes
 
