@@ -4,7 +4,6 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const Invitation = require('../models/Invitation');
 
-
 // Create a chat (private or group)
 const createChat = async (req, res) => {
   try {
@@ -89,9 +88,7 @@ const createChat = async (req, res) => {
       participantsSorted: participantsSorted,
     });
 
-    const invitees = participants.filter(
-      (p) => p.toString() !== creatorIdStr
-    );
+    const invitees = participants.filter((p) => p.toString() !== creatorIdStr);
 
     for (const invitee of invitees) {
       await Invitation.create({
@@ -106,7 +103,6 @@ const createChat = async (req, res) => {
       ...chat.toObject(),
       invitationsSent: invitees.length,
     });
-
   } catch (err) {
     console.error('createChat error', err);
     if (err.code === 11000) {
@@ -122,15 +118,18 @@ const createChat = async (req, res) => {
 const getChatsForUser = async (req, res) => {
   try {
     const userId = req.user._id;
-    const chats = await Chat.find({ 'participants.user': userId }).sort({
-      updatedAt: -1,
-    });
+    const chats = await Chat.find({ 'participants.user': userId })
+      .populate('participants.user', 'fullName email profilePic')
+      .sort({
+        updatedAt: -1,
+      });
     const notJoinedChats = await Chat.find({
       type: 'group',
-      participants: { $not: { $elemMatch: { user: userId } } }
+      participants: { $not: { $elemMatch: { user: userId } } },
     })
-  .collation({ locale: 'en', strength: 2 }) // sort by English alphabet, not ASCII
-  .sort({ name: 1 });
+      .populate('participants.user', 'fullName email profilePic')
+      .collation({ locale: 'en', strength: 2 }) // sort by English alphabet, not ASCII
+      .sort({ name: 1 });
 
     res.status(200).json({
       joinedChats: chats,
@@ -159,10 +158,9 @@ const getMessagesByChatId = async (req, res) => {
     if (!isMember)
       return res.status(403).json({ message: ErrorMessages.NOT_MEMBER });
 
-    const messages = await Message.find({ chatId }).sort({ createdAt: 1 }).populate(
-      'senderId',
-      'fullName profilePic',
-    );
+    const messages = await Message.find({ chatId })
+      .sort({ createdAt: 1 })
+      .populate('senderId', 'fullName profilePic');
     res.status(200).json(messages);
   } catch (err) {
     console.error('getMessagesByChatId', err.message);
@@ -251,7 +249,9 @@ const getChatMembers = async (req, res) => {
     const participantIds = chat.participants.map((p) => p.user);
 
     // Fetch user details for each participant
-    const members = await User.find({ _id: { $in: participantIds } }).select('fullName email profilePic');
+    const members = await User.find({ _id: { $in: participantIds } }).select(
+      'fullName email profilePic',
+    );
 
     const formattedMembers = members.map((user) => ({
       id: user._id,

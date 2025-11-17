@@ -15,9 +15,17 @@ export interface AuthResponse {
 }
 
 export interface Participant {
-    user: string;
+    user:
+        | string
+        | {
+              _id: string;
+              fullName: string;
+              email: string;
+              profilePic?: string;
+          };
     role: 'member' | 'admin';
     fullName: string;
+    profilePic?: string;
     joinedAt: string;
     _id?: string;
 }
@@ -67,17 +75,16 @@ export interface SendMessagePayload {
 }
 
 export type Invitation = {
-  _id: string;
-  chat: {
     _id: string;
-    name: string;
-    type: string;
-  };
-  inviter: {
-    _id: string;
-    fullName: string;
-    email?: string;
-  };
-  status: 'pending' | 'accepted' | 'rejected';
+    chat: {
+        _id: string;
+        name: string;
+        type: string;
+    };
+    inviter: {
+        _id: string;
+        fullName: string;
+        email?: string;
+    };
+    status: 'pending' | 'accepted' | 'rejected';
 };
-

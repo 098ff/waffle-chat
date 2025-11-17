@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Chat, User } from '../../types';
-import ChatListItem from './ChatListItem';
 import EmptyState from '../EmptyState';
-import OnlineUsersModal from './OnlineUsersModal';
 import InvitationsModal from '../InvitationsModal';
+import ChatListItem from './ChatListItem';
+import OnlineUsersModal from './OnlineUsersModal';
 
 interface ChatSidebarProps {
     joinedChats: Chat[];
@@ -30,33 +30,33 @@ export default function ChatSidebar({
     onLogout,
 }: ChatSidebarProps) {
     const navigate = useNavigate();
-    
+
     const [showOnlineModal, setShowOnlineModal] = useState(false);
     const [showInvitations, setShowInvitations] = useState(false);
 
     return (
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-4">
+        <div className="flex w-80 flex-col border-r border-gray-200 bg-white">
+            <div className="border-b border-gray-200 p-4">
+                <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-gray-800">Chats</h2>
                     <div className="flex gap-2">
                         <button
                             onClick={() => navigate('/create-chat')}
-                            className="p-2 outline-2 bg-blue-300 text-white rounded-lg hover:outline-blue-700 transition"
+                            className="rounded-lg bg-blue-300 p-2 text-white outline-2 transition hover:outline-blue-700"
                             title="New Chat"
                         >
                             ➕
                         </button>
                         <button
                             onClick={() => setShowInvitations(true)}
-                            className="p-2 outline-2 bg-yellow-300 text-white rounded-lg hover:outline-yellow-700 transition"
+                            className="rounded-lg bg-yellow-300 p-2 text-white outline-2 transition hover:outline-yellow-700"
                             title="Invitations"
                         >
                             📩
                         </button>
                         <button
                             onClick={onLogout}
-                            className="p-2 outline-2 bg-red-300 text-white rounded-lg hover:outline-red-700 transition"
+                            className="rounded-lg bg-red-300 p-2 text-white outline-2 transition hover:outline-red-700"
                             title="Logout"
                         >
                             🚪
@@ -70,10 +70,10 @@ export default function ChatSidebar({
                     </div>
                     <button
                         onClick={() => setShowOnlineModal(true)}
-                        className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                        className="flex items-center gap-1 rounded-lg bg-green-100 px-2 py-1 text-green-700 transition hover:bg-green-200"
                         title="View online users"
                     >
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span className="h-2 w-2 rounded-full bg-green-500"></span>
                         <span className="font-medium">
                             {onlineUserIds.length}
                         </span>
@@ -92,9 +92,10 @@ export default function ChatSidebar({
                 onClose={() => setShowInvitations(false)}
             />
 
-            
             <div className="flex-1 overflow-y-auto">
-                <div className='text-xl font-bold text-gray-800 text-center py-2 bg-gray-100'>Joined Chat</div>
+                <div className="bg-gray-100 py-2 text-center text-xl font-bold text-gray-800">
+                    Joined Chat
+                </div>
                 {joinedChats.length === 0 ? (
                     <EmptyState
                         message="No chats yet"
@@ -109,6 +110,7 @@ export default function ChatSidebar({
                             key={chat._id}
                             chat={chat}
                             currentUser={user}
+                            allUsers={allUsers}
                             isActive={currentChat?._id === chat._id}
                             online={isOnline(chat)}
                             onClick={() => onChatSelect(chat)}
@@ -116,7 +118,9 @@ export default function ChatSidebar({
                     ))
                 )}
 
-                <div className='text-xl font-bold text-gray-800 text-center py-2 bg-gray-100'>Not Joined</div>
+                <div className="bg-gray-100 py-2 text-center text-xl font-bold text-gray-800">
+                    Not Joined
+                </div>
                 {notJoinedChats.length === 0 ? (
                     <EmptyState
                         message="No More Chat to Join!"
@@ -131,13 +135,13 @@ export default function ChatSidebar({
                             key={chat._id}
                             chat={chat}
                             currentUser={user}
+                            allUsers={allUsers}
                             isActive={currentChat?._id === chat._id}
                             online={isOnline(chat)}
                             onClick={() => onChatSelect(chat)}
                         />
                     ))
                 )}
-
             </div>
         </div>
     );

@@ -3,25 +3,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ChatHeader from '../components/chat/ChatHeader';
+import ChatLock from '../components/chat/ChatLock';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import EmptyState from '../components/EmptyState';
 import MessageInput from '../components/message/MessageInput';
 import MessageList from '../components/message/MessageList';
 import { chatAPI, messageAPI } from '../services/api';
 import { socketService } from '../services/socket';
-import type {AppDispatch, RootState} from '../store';
+import type { AppDispatch, RootState } from '../store';
 import { logout } from '../store/authSlice';
 import {
     addMessage,
     setChats,
     setCurrentChat,
     setMessages,
+    setNotJoinedChats,
     setOnlineUsers,
     setTyping,
-    setNotJoinedChats,
 } from '../store/chatSlice';
 import type { Chat, Message, User } from '../types';
-import ChatLock from '../components/chat/ChatLock';
+import { getChatName, getChatProfilePic } from '../utils';
 
 export default function ChatRoom() {
     const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
@@ -30,8 +31,14 @@ export default function ChatRoom() {
     const dispatch = useDispatch<AppDispatch>();
 
     const { user, token } = useSelector((state: RootState) => state.auth);
-    const { chats, notJoinedChats, currentChat, messages, typingUsers, onlineUsers } =
-        useSelector((state: RootState) => state.chat);
+    const {
+        chats,
+        notJoinedChats,
+        currentChat,
+        messages,
+        typingUsers,
+        onlineUsers,
+    } = useSelector((state: RootState) => state.chat);
 
     useEffect(() => {
         if (!token) {
@@ -49,7 +56,9 @@ export default function ChatRoom() {
     }, [token]);
 
     useEffect(() => {
-        const isNotJoined = !!currentChat && notJoinedChats.some((c) => c._id === currentChat._id);
+        const isNotJoined =
+            !!currentChat &&
+            notJoinedChats.some((c) => c._id === currentChat._id);
 
         if (isNotJoined) {
             return;
@@ -186,19 +195,6 @@ export default function ChatRoom() {
         navigate('/login');
     };
 
-    const getChatName = (chat: Chat) => {
-        if (chat.type === 'group') {
-            return chat.name || 'Group Chat';
-        }
-        const otherParticipant = chat.participants.find(
-            (p) => p.user !== user?._id,
-        );
-        if (otherParticipant) {
-            return otherParticipant.fullName;
-        }
-        return 'Private Chat';
-    };
-
     const getTypingUsers = () => {
         if (!currentChat) return [];
         return typingUsers[currentChat._id] || [];
@@ -208,13 +204,20 @@ export default function ChatRoom() {
         if (chat.type === 'group') {
             // Check if ANY participant in the group is online (excluding current user)
             return chat.participants.some((p) => {
-                const userId = p.user.trim();
-                return onlineUsers.includes(userId);
+                const userId = typeof p.user === 'string' ? p.user : p.user._id;
+                return onlineUsers.includes(userId.trim());
             });
         } else {
             // For private chat, check if the other user is online
-            const otherUserId =
-                chat.participants.find((p) => p.user !== user?._id)?.user || '';
+            const otherParticipant = chat.participants.find((p) => {
+                const userId = typeof p.user === 'string' ? p.user : p.user._id;
+                return userId !== user?._id;
+            });
+            const otherUserId = otherParticipant
+                ? typeof otherParticipant.user === 'string'
+                    ? otherParticipant.user
+                    : otherParticipant.user._id
+                : '';
             return onlineUsers.includes(otherUserId.trim());
         }
     };
@@ -238,12 +241,19 @@ export default function ChatRoom() {
                     <>
                         <ChatHeader
                             chat={currentChat}
-                            chatName={getChatName(currentChat)}
+                            chatName={getChatName(currentChat, user?._id)}
+                            chatProfilePic={getChatProfilePic(
+                                currentChat,
+                                user?._id,
+                                allUsers,
+                            )}
                             online={isOnline(currentChat)}
                             onlineUserIds={onlineUsers}
                         />
 
-                        {notJoinedChats.some((c) => c._id === currentChat._id) ? (
+                        {notJoinedChats.some(
+                            (c) => c._id === currentChat._id,
+                        ) ? (
                             <ChatLock chatId={currentChat._id} />
                         ) : (
                             <>
@@ -260,23 +270,33 @@ export default function ChatRoom() {
                                     onSendImage={async (base64: string) => {
                                         if (!currentChat) return;
 
-                                        return new Promise<void>((resolve, reject) => {
-                                            socketService.sendMessage(
-                                                {
-                                                    chatId: currentChat._id,
-                                                    text: '',
-                                                    image: base64,
-                                                },
-                                                (ack: any) => {
-                                                    if (ack.status === 'ok') {
-                                                        resolve();
-                                                    } else {
-                                                        toast.error('Failed to send image');
-                                                        reject(new Error('Failed to send image'));
-                                                    }
-                                                },
-                                            );
-                                        });
+                                        return new Promise<void>(
+                                            (resolve, reject) => {
+                                                socketService.sendMessage(
+                                                    {
+                                                        chatId: currentChat._id,
+                                                        text: '',
+                                                        image: base64,
+                                                    },
+                                                    (ack: any) => {
+                                                        if (
+                                                            ack.status === 'ok'
+                                                        ) {
+                                                            resolve();
+                                                        } else {
+                                                            toast.error(
+                                                                'Failed to send image',
+                                                            );
+                                                            reject(
+                                                                new Error(
+                                                                    'Failed to send image',
+                                                                ),
+                                                            );
+                                                        }
+                                                    },
+                                                );
+                                            },
+                                        );
                                     }}
                                 />
                             </>
